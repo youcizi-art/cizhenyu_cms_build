@@ -1,0 +1,173 @@
+[
+  {
+    "name": "文章/博客",
+    "slug": "b2b_article",
+    "modelSlug": "article",
+    "groupPath": "b2b/content",
+    "description": "长文内容发布，聚焦标题、正文、摘要和封面图等基础内容维护。",
+    "icon": "FileTextOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "客户询盘",
+    "slug": "b2b_inquiry",
+    "modelSlug": "b2b_inquiry",
+    "groupPath": "b2b/business",
+    "description": "来自前端站点的产品询盘，自动归集到线索中。",
+    "icon": "MailOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "产品",
+    "slug": "b2b_product",
+    "modelSlug": "b2b_product",
+    "groupPath": "b2b/products",
+    "description": "外贸 B2B 核心产品数据，聚焦基础信息、图片展示与正文描述。",
+    "icon": "InboxOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "案例",
+    "slug": "b2b_case_study",
+    "modelSlug": "case_study",
+    "groupPath": "b2b/content",
+    "description": "案例展示与案例详情内容，用于品牌背书和项目成果展示。",
+    "icon": "SolutionOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "公司信息",
+    "slug": "b2b_company_info",
+    "modelSlug": "company_info",
+    "groupPath": "b2b/settings",
+    "description": "企业基础信息（名称、地址、联系方式等），供前端 About 页面与 Footer 使用。",
+    "icon": "BankOutlined",
+    "presentationMode": "single_form"
+  },
+  {
+    "name": "内容区块",
+    "slug": "b2b_content_block",
+    "modelSlug": "content_block",
+    "groupPath": "b2b/content",
+    "description": "站点级可复用区块：首页首屏、列表页 Banner、页脚 CTA、公告条等散落展示内容。",
+    "icon": "LayoutOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "内容分类",
+    "slug": "b2b_content_category",
+    "modelSlug": "content_category",
+    "groupPath": "b2b/content",
+    "description": "内容管理专用分类模型，用于文章、案例、行业、FAQ 与资源中心的内容归类。",
+    "icon": "ApartmentOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "实体",
+    "slug": "b2b_entity",
+    "modelSlug": "entity",
+    "groupPath": "b2b/knowledge",
+    "description": "用于沉淀品牌、术语、机构、主题等可复用实体数据。",
+    "icon": "ClusterOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "常见问题",
+    "slug": "b2b_faq",
+    "modelSlug": "faq",
+    "groupPath": "b2b/content",
+    "description": "FAQ 知识模块，可挂接到产品页、文章页与品牌页。",
+    "icon": "QuestionCircleOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "行业解决方案",
+    "slug": "b2b_industry",
+    "modelSlug": "industry",
+    "groupPath": "b2b/content",
+    "description": "行业场景页面，适合沉淀行业痛点、解决方案与行业内容说明。",
+    "icon": "BuildOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "导航管理",
+    "slug": "b2b_nav_menu",
+    "modelSlug": "nav_menu",
+    "groupPath": "b2b/settings",
+    "description": "站点导航菜单配置，支持 Header / Footer / Sidebar 多区域。",
+    "icon": "MenuOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "导航菜单项",
+    "slug": "b2b_nav_menu_item",
+    "modelSlug": "nav_menu_item",
+    "groupPath": "b2b/settings",
+    "description": "菜单层级节点与具体链接项",
+    "icon": "UnorderedListOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "在线留言",
+    "slug": "b2b_online_message",
+    "modelSlug": "online_message",
+    "groupPath": "b2b/business",
+    "description": "通用联系表单，自动归集到线索中心",
+    "icon": "MessageOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "独立页面",
+    "slug": "b2b_page",
+    "modelSlug": "page",
+    "groupPath": "b2b/content",
+    "description": "独立页面内容容器，用于关于我们、联系页、专题页和普通落地页。",
+    "icon": "AppstoreOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "产品分类",
+    "slug": "b2b_product_category",
+    "modelSlug": "product_category",
+    "groupPath": "b2b/products",
+    "description": "产品中心专用分类模型，用于产品列表、详情页和分类归档展示。",
+    "icon": "ApartmentOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "产品规格模板",
+    "slug": "b2b_product_spec_template",
+    "modelSlug": "product_spec_template",
+    "groupPath": "b2b/products",
+    "description": "沉淀产品规格模板，供产品录入时快速引用并在具体产品上二次调整。",
+    "icon": "ProfileOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "资料下载",
+    "slug": "b2b_resource",
+    "modelSlug": "resource",
+    "groupPath": "b2b/content",
+    "description": "B2B 资料下载中心，用于发布产品目录、白皮书、技术手册、案例集等可下载资料。",
+    "icon": "DownloadOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "语义分类",
+    "slug": "b2b_taxonomy",
+    "modelSlug": "taxonomy",
+    "groupPath": "b2b/knowledge",
+    "description": "用于实体库的标签组织与归类，不承担产品分类或内容分类职能。",
+    "icon": "ClusterOutlined",
+    "presentationMode": "list"
+  },
+  {
+    "name": "翻译字段",
+    "slug": "b2b_translation_fields",
+    "modelSlug": "translation_fields",
+    "groupPath": "b2b/settings",
+    "description": "维护站点级翻译字段 JSON 配置，供多语言字段映射与文案生成场景使用。",
+    "icon": "TranslationOutlined",
+    "presentationMode": "single_form"
+  }
+]

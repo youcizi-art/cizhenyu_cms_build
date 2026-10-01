@@ -1,0 +1,20 @@
+{
+  "kind": "cms-worker",
+  "version": "20261001",
+  "entry": "worker/index.js",
+  "assetsDir": "client",
+  "migrationsDir": "migrations",
+  "bindings": [
+    "DB",
+    "MEDIA_BUCKET",
+    "RATE_LIMITER",
+    "NS_CONFIG",
+    "SESSION",
+    "ASSETS"
+  ],
+  "compatibility_date": "2024-11-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "sanitized": true
+}

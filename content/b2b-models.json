@@ -1,0 +1,3097 @@
+[
+  {
+    "name": "文章/博客",
+    "slug": "article",
+    "description": "长文内容发布，聚焦标题、正文、摘要和封面图等基础内容维护。",
+    "fields": [
+      {
+        "name": "title",
+        "type": "text",
+        "label": "标题",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "URL Slug",
+        "isListDisplay": true
+      },
+      {
+        "name": "author",
+        "type": "text",
+        "label": "作者",
+        "isListDisplay": true
+      },
+      {
+        "name": "content_type",
+        "type": "select",
+        "label": "内容类型",
+        "isListDisplay": true,
+        "options": [
+          {
+            "label": "新闻/资讯",
+            "value": "news"
+          },
+          {
+            "label": "购买指南",
+            "value": "buying_guide"
+          },
+          {
+            "label": "对比评测",
+            "value": "comparison"
+          },
+          {
+            "label": "技术指南",
+            "value": "technical"
+          },
+          {
+            "label": "应用指南",
+            "value": "application_guide"
+          }
+        ],
+        "defaultValue": "news"
+      },
+      {
+        "name": "taxonomy_ids",
+        "type": "relation_multi",
+        "label": "内容分类",
+        "isListDisplay": true,
+        "relationConfig": {
+          "collectionSlug": "b2b_content_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "entities",
+        "type": "relation_multi",
+        "label": "关联实体",
+        "relationConfig": {
+          "collectionSlug": "b2b_entity",
+          "displayField": "entity_name"
+        }
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "封面"
+      },
+      {
+        "name": "content",
+        "type": "richtext",
+        "label": "正文"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "摘要"
+      },
+      {
+        "name": "excerpt",
+        "type": "textarea",
+        "label": "文章导读"
+      },
+      {
+        "name": "short_answer",
+        "type": "textarea",
+        "label": "GEO 简答",
+        "placeholder": "一句话直接回答页面核心问题，便于 AI/摘要引用"
+      },
+      {
+        "name": "related_article_ids",
+        "type": "relation_multi",
+        "label": "相关文章",
+        "relationConfig": {
+          "collectionSlug": "b2b_article",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_product_ids",
+        "type": "relation_multi",
+        "label": "关联产品",
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_industry_ids",
+        "type": "relation_multi",
+        "label": "关联行业",
+        "relationConfig": {
+          "collectionSlug": "b2b_industry",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "featured",
+        "type": "multi_select",
+        "label": "推荐内容",
+        "isListDisplay": true,
+        "options": [
+          {
+            "label": "无",
+            "value": "0"
+          },
+          {
+            "label": "首页",
+            "value": "1"
+          },
+          {
+            "label": "推荐",
+            "value": "2"
+          }
+        ],
+        "defaultValue": [
+          "0"
+        ]
+      },
+      {
+        "name": "reading_time",
+        "type": "number",
+        "label": "预计阅读时间"
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "url_slug",
+        "type": "text",
+        "label": "访问路径"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${title}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "客户询盘",
+    "slug": "b2b_inquiry",
+    "description": "来自前端站点的产品询盘，自动归集到线索中。",
+    "fields": [
+      {
+        "name": "subject",
+        "type": "text",
+        "label": "需求主题",
+        "isListDisplay": true
+      },
+      {
+        "name": "product",
+        "type": "relation_single",
+        "label": "关联产品",
+        "isListDisplay": true,
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "label": "联系人姓名",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "label": "电子邮箱",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "label": "联系电话"
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "label": "国家/地区",
+        "isListDisplay": true
+      },
+      {
+        "name": "ip",
+        "type": "text",
+        "label": "访客 IP",
+        "isListDisplay": true
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "label": "流量来源"
+      },
+      {
+        "name": "content",
+        "type": "textarea",
+        "label": "具体需求",
+        "required": true
+      }
+    ]
+  },
+  {
+    "name": "产品",
+    "slug": "b2b_product",
+    "description": "外贸 B2B 核心产品数据，聚焦基础信息、图片展示与正文描述。",
+    "fields": [
+      {
+        "name": "title",
+        "type": "text",
+        "label": "产品标题",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "URL Slug",
+        "isListDisplay": true
+      },
+      {
+        "name": "sku",
+        "type": "text",
+        "label": "SKU / 型号",
+        "isListDisplay": true
+      },
+      {
+        "name": "brand",
+        "type": "text",
+        "label": "品牌",
+        "isListDisplay": true
+      },
+      {
+        "name": "taxonomy_ids",
+        "type": "relation_multi",
+        "label": "产品分类",
+        "isListDisplay": true,
+        "relationConfig": {
+          "collectionSlug": "b2b_product_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "spec_template_id",
+        "type": "relation_single",
+        "label": "规格模板",
+        "relationConfig": {
+          "collectionSlug": "b2b_product_spec_template",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "spec_data",
+        "type": "json",
+        "label": "产品规格参数"
+      },
+      {
+        "name": "entities",
+        "type": "relation_multi",
+        "label": "关联实体",
+        "relationConfig": {
+          "collectionSlug": "b2b_entity",
+          "displayField": "entity_name"
+        }
+      },
+      {
+        "name": "images",
+        "type": "multi_image",
+        "label": "产品图片 (多图)"
+      },
+      {
+        "name": "price",
+        "type": "number",
+        "label": "参考价格"
+      },
+      {
+        "name": "price_currency",
+        "type": "text",
+        "label": "价格币种",
+        "defaultValue": "USD"
+      },
+      {
+        "name": "availability",
+        "type": "select",
+        "label": "可售状态",
+        "options": [
+          "InStock",
+          "OutOfStock",
+          "PreOrder"
+        ],
+        "defaultValue": "InStock"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "摘要"
+      },
+      {
+        "name": "tagline",
+        "type": "text",
+        "label": "一句话定位"
+      },
+      {
+        "name": "description",
+        "type": "richtext",
+        "label": "详细描述"
+      },
+      {
+        "name": "advantages",
+        "type": "json",
+        "label": "核心优势",
+        "defaultValue": []
+      },
+      {
+        "name": "video_url",
+        "type": "text",
+        "label": "产品视频 URL"
+      },
+      {
+        "name": "oem_content",
+        "type": "richtext",
+        "label": "OEM / ODM"
+      },
+      {
+        "name": "quality_content",
+        "type": "richtext",
+        "label": "质量控制"
+      },
+      {
+        "name": "application_scenes",
+        "type": "richtext",
+        "label": "应用场景"
+      },
+      {
+        "name": "how_it_works",
+        "type": "richtext",
+        "label": "工作原理"
+      },
+      {
+        "name": "capacity_content",
+        "type": "richtext",
+        "label": "生产能力"
+      },
+      {
+        "name": "certifications",
+        "type": "json",
+        "label": "认证列表",
+        "defaultValue": []
+      },
+      {
+        "name": "industry_ids",
+        "type": "relation_multi",
+        "label": "适用行业",
+        "relationConfig": {
+          "collectionSlug": "b2b_industry",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "related_product_ids",
+        "type": "relation_multi",
+        "label": "相关产品",
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_case_ids",
+        "type": "relation_multi",
+        "label": "相关案例",
+        "relationConfig": {
+          "collectionSlug": "b2b_case_study",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "faq_ids",
+        "type": "relation_multi",
+        "label": "产品 FAQ",
+        "relationConfig": {
+          "collectionSlug": "b2b_faq",
+          "displayField": "question"
+        }
+      },
+      {
+        "name": "related_article_ids",
+        "type": "relation_multi",
+        "label": "相关文章/应用指南",
+        "relationConfig": {
+          "collectionSlug": "b2b_article",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "url_slug",
+        "type": "text",
+        "label": "访问路径"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "name": "${title}",
+          "description": "${summary}",
+          "sku": "${sku}",
+          "brand": "${brand}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "案例",
+    "slug": "case_study",
+    "description": "案例展示与案例详情内容，用于品牌背书和项目成果展示。",
+    "fields": [
+      {
+        "name": "title",
+        "type": "text",
+        "label": "案例标题",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "URL Slug",
+        "isListDisplay": true
+      },
+      {
+        "name": "industry",
+        "type": "text",
+        "label": "所属行业（展示名）",
+        "isListDisplay": true
+      },
+      {
+        "name": "industry_ids",
+        "type": "relation_multi",
+        "label": "关联行业",
+        "relationConfig": {
+          "collectionSlug": "b2b_industry",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "related_product_ids",
+        "type": "relation_multi",
+        "label": "关联产品",
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "client_name",
+        "type": "text",
+        "label": "客户名称",
+        "isListDisplay": true
+      },
+      {
+        "name": "taxonomy_ids",
+        "type": "relation_multi",
+        "label": "内容分类",
+        "relationConfig": {
+          "collectionSlug": "b2b_content_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "entities",
+        "type": "relation_multi",
+        "label": "关联实体",
+        "relationConfig": {
+          "collectionSlug": "b2b_entity",
+          "displayField": "entity_name"
+        }
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "案例封面"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "案例摘要"
+      },
+      {
+        "name": "challenge",
+        "type": "richtext",
+        "label": "项目挑战"
+      },
+      {
+        "name": "solution",
+        "type": "richtext",
+        "label": "解决方案"
+      },
+      {
+        "name": "results",
+        "type": "richtext",
+        "label": "项目成果"
+      },
+      {
+        "name": "content",
+        "type": "richtext",
+        "label": "案例正文"
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "url_slug",
+        "type": "text",
+        "label": "访问路径"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${title}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "公司信息",
+    "slug": "company_info",
+    "description": "企业基础信息（名称、地址、联系方式等），供前端 About 页面与 Footer 使用。",
+    "fields": [
+      {
+        "name": "company_name",
+        "type": "text",
+        "label": "公司名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "organization_type",
+        "type": "text",
+        "label": "组织类型"
+      },
+      {
+        "name": "company_type",
+        "type": "select",
+        "label": "公司类型",
+        "isListDisplay": true,
+        "options": [
+          "manufacturer",
+          "supplier",
+          "service_provider",
+          "software_company",
+          "education",
+          "organization",
+          "other"
+        ]
+      },
+      {
+        "name": "logo",
+        "type": "image",
+        "label": "Logo"
+      },
+      {
+        "name": "footer_logo",
+        "type": "image",
+        "label": "底部logo"
+      },
+      {
+        "name": "slogan",
+        "type": "text",
+        "label": "Slogan / 标语"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "摘要"
+      },
+      {
+        "name": "website",
+        "type": "text",
+        "label": "官网地址"
+      },
+      {
+        "name": "address",
+        "type": "textarea",
+        "label": "公司地址"
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "label": "国家/地区"
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "label": "联系电话"
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "label": "联系邮箱"
+      },
+      {
+        "name": "founding_date",
+        "type": "text",
+        "label": "成立时间"
+      },
+      {
+        "name": "social_profiles",
+        "type": "json",
+        "label": "社交媒体 / sameAs",
+        "defaultValue": []
+      },
+      {
+        "name": "industry_focus",
+        "type": "relation_multi",
+        "label": "行业聚焦",
+        "relationConfig": {
+          "collectionSlug": "b2b_industry",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "employee_count",
+        "type": "number",
+        "label": "员工人数"
+      },
+      {
+        "name": "factory_area",
+        "type": "text",
+        "label": "工厂面积"
+      },
+      {
+        "name": "main_products",
+        "type": "relation_multi",
+        "label": "主营产品",
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "main_services",
+        "type": "textarea",
+        "label": "主营服务"
+      },
+      {
+        "name": "about_content",
+        "type": "richtext",
+        "label": "公司简介(富文本)"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "name": "${company_name}",
+          "description": "${summary}",
+          "url": "${website}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "内容区块",
+    "slug": "content_block",
+    "description": "站点级可复用区块：首页首屏、列表页 Banner、页脚 CTA、公告条等散落展示内容。",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "区块名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "区块标识",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "block_type",
+        "type": "select",
+        "label": "区块类型",
+        "required": true,
+        "isListDisplay": true,
+        "options": [
+          "hero",
+          "banner",
+          "cta",
+          "feature",
+          "richtext",
+          "media",
+          "announcement",
+          "custom"
+        ],
+        "defaultValue": "banner"
+      },
+      {
+        "name": "placement",
+        "type": "select",
+        "label": "投放位置",
+        "required": true,
+        "isListDisplay": true,
+        "options": [
+          "home_hero",
+          "products_banner",
+          "articles_banner",
+          "about_banner",
+          "contact_banner",
+          "footer_cta",
+          "global_announcement",
+          "custom"
+        ],
+        "defaultValue": "custom"
+      },
+      {
+        "name": "page_key",
+        "type": "text",
+        "label": "页面键",
+        "isListDisplay": true
+      },
+      {
+        "name": "eyebrow",
+        "type": "text",
+        "label": "眉标 / 提示文案"
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "label": "主标题",
+        "isListDisplay": true
+      },
+      {
+        "name": "subtitle",
+        "type": "text",
+        "label": "副标题"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "摘要"
+      },
+      {
+        "name": "content",
+        "type": "richtext",
+        "label": "正文内容"
+      },
+      {
+        "name": "image",
+        "type": "image",
+        "label": "主图"
+      },
+      {
+        "name": "mobile_image",
+        "type": "image",
+        "label": "移动端主图"
+      },
+      {
+        "name": "background_image",
+        "type": "image",
+        "label": "背景图"
+      },
+      {
+        "name": "video_url",
+        "type": "text",
+        "label": "视频地址"
+      },
+      {
+        "name": "link_url",
+        "type": "text",
+        "label": "跳转链接"
+      },
+      {
+        "name": "link_label",
+        "type": "text",
+        "label": "按钮文案"
+      },
+      {
+        "name": "link_target",
+        "type": "select",
+        "label": "打开方式",
+        "options": [
+          "_self",
+          "_blank"
+        ],
+        "defaultValue": "_self"
+      },
+      {
+        "name": "extra",
+        "type": "json",
+        "label": "扩展配置"
+      },
+      {
+        "name": "target_reference",
+        "type": "reference",
+        "label": "通用引用",
+        "relationConfig": {
+          "allowedCollections": [
+            "b2b_product",
+            "b2b_content_category",
+            "b2b_article",
+            "b2b_product_category",
+            "b2b_faq",
+            "b2b_page",
+            "b2b_case_study",
+            "b2b_industry",
+            "b2b_resource",
+            "b2b_entity"
+          ]
+        }
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${title}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "内容分类",
+    "slug": "content_category",
+    "description": "内容管理专用分类模型，用于文章、案例、行业、FAQ 与资源中心的内容归类。",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "分类名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "分类标识",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "parent_id",
+        "type": "relation_single",
+        "label": "父分类",
+        "relationConfig": {
+          "collectionSlug": "b2b_content_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "description",
+        "type": "textarea",
+        "label": "分类说明"
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "封面"
+      },
+      {
+        "name": "icon",
+        "type": "text",
+        "label": "图标"
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${name}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "实体",
+    "slug": "entity",
+    "description": "用于沉淀品牌、术语、机构、主题等可复用实体数据。",
+    "fields": [
+      {
+        "name": "entity_name",
+        "type": "text",
+        "label": "实体名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "entity_type",
+        "type": "select",
+        "label": "实体类型",
+        "isListDisplay": true,
+        "options": [
+          "company",
+          "brand",
+          "product",
+          "service",
+          "industry",
+          "material",
+          "technology",
+          "software",
+          "person",
+          "standard",
+          "location",
+          "organization",
+          "concept",
+          "custom"
+        ]
+      },
+      {
+        "name": "description",
+        "type": "textarea",
+        "label": "实体描述"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "摘要"
+      },
+      {
+        "name": "official_url",
+        "type": "text",
+        "label": "官方网站"
+      },
+      {
+        "name": "logo",
+        "type": "image",
+        "label": "Logo"
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "封面"
+      },
+      {
+        "name": "taxonomy_ids",
+        "type": "relation_multi",
+        "label": "分类体系",
+        "relationConfig": {
+          "collectionSlug": "b2b_taxonomy",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "related_articles",
+        "type": "relation_multi",
+        "label": "关联文章",
+        "relationConfig": {
+          "collectionSlug": "b2b_article",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_resources",
+        "type": "relation_multi",
+        "label": "关联资源",
+        "relationConfig": {
+          "collectionSlug": "b2b_resource",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_products",
+        "type": "relation_multi",
+        "label": "关联产品",
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_industries",
+        "type": "relation_multi",
+        "label": "关联行业",
+        "relationConfig": {
+          "collectionSlug": "b2b_industry",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${entity_name}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "常见问题",
+    "slug": "faq",
+    "description": "FAQ 知识模块，可挂接到产品页、文章页与品牌页。",
+    "fields": [
+      {
+        "name": "question",
+        "type": "text",
+        "label": "问题",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "answer",
+        "type": "richtext",
+        "label": "回答",
+        "required": true
+      },
+      {
+        "name": "short_answer",
+        "type": "textarea",
+        "label": "GEO 简答",
+        "placeholder": "一句话直接回答该问题"
+      },
+      {
+        "name": "taxonomy_ids",
+        "type": "relation_multi",
+        "label": "内容分类",
+        "relationConfig": {
+          "collectionSlug": "b2b_content_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "related_product",
+        "type": "relation_single",
+        "label": "关联商品",
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_article",
+        "type": "relation_single",
+        "label": "关联文章",
+        "relationConfig": {
+          "collectionSlug": "b2b_article",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_industry",
+        "type": "relation_single",
+        "label": "关联行业",
+        "relationConfig": {
+          "collectionSlug": "b2b_industry",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "name": "${question}",
+          "text": "${answer}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "行业解决方案",
+    "slug": "industry",
+    "description": "行业场景页面，适合沉淀行业痛点、解决方案与行业内容说明。",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "行业名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "URL Slug",
+        "isListDisplay": true
+      },
+      {
+        "name": "taxonomy_ids",
+        "type": "relation_multi",
+        "label": "内容分类",
+        "relationConfig": {
+          "collectionSlug": "b2b_content_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "entities",
+        "type": "relation_multi",
+        "label": "关联实体",
+        "relationConfig": {
+          "collectionSlug": "b2b_entity",
+          "displayField": "entity_name"
+        }
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "封面"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "行业简介"
+      },
+      {
+        "name": "pain_points",
+        "type": "richtext",
+        "label": "行业痛点"
+      },
+      {
+        "name": "solutions",
+        "type": "richtext",
+        "label": "解决方案"
+      },
+      {
+        "name": "content",
+        "type": "richtext",
+        "label": "正文"
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "url_slug",
+        "type": "text",
+        "label": "访问路径"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${name}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "导航管理",
+    "slug": "nav_menu",
+    "description": "站点导航菜单配置，支持 Header / Footer / Sidebar 多区域。",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "菜单统称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "唯一标识",
+        "required": true,
+        "isListDisplay": true,
+        "placeholder": "header/footer/sidebar"
+      },
+      {
+        "name": "menu_type",
+        "type": "select",
+        "label": "菜单类型",
+        "isListDisplay": true,
+        "options": [
+          "header",
+          "footer",
+          "sidebar",
+          "breadcrumb",
+          "utility"
+        ],
+        "defaultValue": "header"
+      }
+    ]
+  },
+  {
+    "name": "导航菜单项",
+    "slug": "nav_menu_item",
+    "description": "菜单层级节点与具体链接项",
+    "fields": [
+      {
+        "name": "nav_menu_ids",
+        "type": "relation_multi",
+        "label": "所属导航",
+        "required": true,
+        "isListDisplay": true,
+        "relationConfig": {
+          "collectionSlug": "b2b_nav_menu",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "parent_id",
+        "type": "relation_single",
+        "label": "父级菜单",
+        "relationConfig": {
+          "collectionSlug": "b2b_nav_menu_item",
+          "displayField": "title",
+          "parentKey": "parent_id"
+        }
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "label": "显示标题",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "模板标识",
+        "isListDisplay": true,
+        "placeholder": "home / products / about"
+      },
+      {
+        "name": "link_mode",
+        "type": "select",
+        "label": "链接方式",
+        "required": true,
+        "isListDisplay": true,
+        "options": [
+          {
+            "label": "链接模式",
+            "value": "link"
+          },
+          {
+            "label": "引用模式",
+            "value": "reference"
+          }
+        ],
+        "defaultValue": "link"
+      },
+      {
+        "name": "link_url",
+        "type": "text",
+        "label": "跳转链接",
+        "isListDisplay": true,
+        "placeholder": "https://... 或 /path",
+        "ui": {
+          "visibleWhen": {
+            "field": "link_mode",
+            "equals": "link"
+          }
+        }
+      },
+      {
+        "name": "target_reference",
+        "type": "reference",
+        "label": "菜单数据",
+        "isListDisplay": true,
+        "ui": {
+          "visibleWhen": {
+            "field": "link_mode",
+            "equals": "reference"
+          }
+        },
+        "relationConfig": {
+          "allowedCollections": [
+            "b2b_product",
+            "b2b_content_category",
+            "b2b_article",
+            "b2b_product_category",
+            "b2b_faq",
+            "b2b_page",
+            "b2b_case_study",
+            "b2b_industry",
+            "b2b_resource",
+            "b2b_entity"
+          ]
+        }
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "open_in_new_tab",
+        "type": "checkbox",
+        "label": "新标签页打开",
+        "isListDisplay": true,
+        "options": [
+          "yes",
+          "no"
+        ]
+      },
+      {
+        "name": "icon",
+        "type": "text",
+        "label": "图标 Class (可选)"
+      }
+    ]
+  },
+  {
+    "name": "在线留言",
+    "slug": "online_message",
+    "description": "通用联系表单，自动归集到线索中心",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "姓名",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "label": "邮箱",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "label": "电话"
+      },
+      {
+        "name": "subject",
+        "type": "text",
+        "label": "留言主题",
+        "isListDisplay": true
+      },
+      {
+        "name": "content",
+        "type": "textarea",
+        "label": "内容",
+        "required": true
+      },
+      {
+        "name": "message_status",
+        "type": "select",
+        "label": "处理状态",
+        "isListDisplay": true,
+        "options": [
+          "未读",
+          "已读",
+          "已回复"
+        ],
+        "defaultValue": "未读"
+      },
+      {
+        "name": "ip",
+        "type": "text",
+        "label": "IP 地址"
+      }
+    ]
+  },
+  {
+    "name": "独立页面",
+    "slug": "page",
+    "description": "独立页面内容容器，用于关于我们、联系页、专题页和普通落地页。",
+    "fields": [
+      {
+        "name": "title",
+        "type": "text",
+        "label": "页面标题",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "URL Slug",
+        "isListDisplay": true
+      },
+      {
+        "name": "entities",
+        "type": "relation_multi",
+        "label": "关联实体",
+        "relationConfig": {
+          "collectionSlug": "b2b_entity",
+          "displayField": "entity_name"
+        }
+      },
+      {
+        "name": "target_reference",
+        "type": "reference",
+        "label": "通用引用",
+        "relationConfig": {
+          "allowedCollections": [
+            "b2b_product",
+            "b2b_content_category",
+            "b2b_article",
+            "b2b_product_category",
+            "b2b_faq",
+            "b2b_page",
+            "b2b_case_study",
+            "b2b_industry",
+            "b2b_resource",
+            "b2b_entity"
+          ]
+        }
+      },
+      {
+        "name": "hero_image",
+        "type": "image",
+        "label": "头图"
+      },
+      {
+        "name": "content",
+        "type": "richtext",
+        "label": "页面内容"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "页面摘要"
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "url_slug",
+        "type": "text",
+        "label": "访问路径"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${title}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "产品分类",
+    "slug": "product_category",
+    "description": "产品中心专用分类模型，用于产品列表、详情页和分类归档展示。",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "分类名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "分类标识",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "parent_id",
+        "type": "relation_single",
+        "label": "父分类",
+        "relationConfig": {
+          "collectionSlug": "b2b_product_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "description",
+        "type": "textarea",
+        "label": "分类说明"
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "封面"
+      },
+      {
+        "name": "icon",
+        "type": "text",
+        "label": "图标"
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "WebPage",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${name}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "资料下载",
+    "slug": "resource",
+    "description": "B2B 资料下载中心，用于发布产品目录、白皮书、技术手册、案例集等可下载资料。",
+    "fields": [
+      {
+        "name": "title",
+        "type": "text",
+        "label": "资料标题",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "URL Slug",
+        "isListDisplay": true
+      },
+      {
+        "name": "resource_type",
+        "type": "select",
+        "label": "资料类型",
+        "isListDisplay": true,
+        "options": [
+          "catalog",
+          "datasheet",
+          "brochure",
+          "whitepaper",
+          "manual",
+          "case_collection",
+          "video",
+          "certificate",
+          "other"
+        ],
+        "defaultValue": "catalog"
+      },
+      {
+        "name": "taxonomy_ids",
+        "type": "relation_multi",
+        "label": "内容分类",
+        "isListDisplay": true,
+        "relationConfig": {
+          "collectionSlug": "b2b_content_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "entities",
+        "type": "relation_multi",
+        "label": "关联实体",
+        "relationConfig": {
+          "collectionSlug": "b2b_entity",
+          "displayField": "entity_name"
+        }
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "封面图"
+      },
+      {
+        "name": "summary",
+        "type": "textarea",
+        "label": "摘要"
+      },
+      {
+        "name": "description",
+        "type": "richtext",
+        "label": "详细说明"
+      },
+      {
+        "name": "download_file",
+        "type": "multi_file",
+        "label": "下载文件",
+        "required": true
+      },
+      {
+        "name": "file_format",
+        "type": "text",
+        "label": "文件格式",
+        "placeholder": "如 PDF、ZIP、MP4"
+      },
+      {
+        "name": "related_products",
+        "type": "relation_multi",
+        "label": "关联产品",
+        "relationConfig": {
+          "collectionSlug": "b2b_product",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "related_articles",
+        "type": "relation_multi",
+        "label": "关联文章",
+        "relationConfig": {
+          "collectionSlug": "b2b_article",
+          "displayField": "title"
+        }
+      },
+      {
+        "name": "gated",
+        "type": "select",
+        "label": "下载门槛",
+        "isListDisplay": true,
+        "options": [
+          "free",
+          "form_required"
+        ],
+        "defaultValue": "free"
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "label": "发布状态",
+        "isListDisplay": true,
+        "options": [
+          "draft",
+          "published"
+        ],
+        "defaultValue": "published"
+      },
+      {
+        "name": "url_slug",
+        "type": "text",
+        "label": "访问路径"
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${title}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "产品规格模板",
+    "slug": "product_spec_template",
+    "description": "沉淀产品规格模板，供产品录入时快速引用并在具体产品上二次调整。",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "模板名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "模板标识",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "product_category_id",
+        "type": "relation_single",
+        "label": "适用产品分类",
+        "relationConfig": {
+          "collectionSlug": "b2b_product_category",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "spec_data",
+        "type": "json",
+        "label": "默认规格参数",
+        "required": true
+      },
+      {
+        "name": "description",
+        "type": "textarea",
+        "label": "模板说明"
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "template_status",
+        "type": "select",
+        "label": "模板状态",
+        "isListDisplay": true,
+        "options": [
+          "active",
+          "inactive"
+        ],
+        "defaultValue": "active"
+      }
+    ]
+  },
+  {
+    "name": "语义分类",
+    "slug": "taxonomy",
+    "description": "用于实体库的标签组织与归类，不承担产品分类或内容分类职能。",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "label": "标签名称",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "label": "分类标识",
+        "required": true,
+        "isListDisplay": true
+      },
+      {
+        "name": "taxonomy_type",
+        "type": "select",
+        "label": "标签类型",
+        "isListDisplay": true,
+        "options": [
+          "semantic",
+          "industry",
+          "knowledge",
+          "brand",
+          "topic",
+          "custom"
+        ]
+      },
+      {
+        "name": "parent_id",
+        "type": "relation_single",
+        "label": "父标签",
+        "relationConfig": {
+          "collectionSlug": "b2b_taxonomy",
+          "displayField": "name"
+        }
+      },
+      {
+        "name": "description",
+        "type": "textarea",
+        "label": "标签说明"
+      },
+      {
+        "name": "cover",
+        "type": "image",
+        "label": "封面"
+      },
+      {
+        "name": "icon",
+        "type": "text",
+        "label": "图标"
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "label": "排序",
+        "isListDisplay": true,
+        "defaultValue": "0",
+        "validation": {
+          "numberMode": "integer",
+          "numberStep": 1,
+          "allowNegative": false
+        }
+      },
+      {
+        "name": "seo_title",
+        "type": "text",
+        "label": "SEO 标题",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "seo_description",
+        "type": "textarea",
+        "label": "SEO 描述",
+        "ui": {
+          "group": "_seo"
+        },
+        "validation": {
+          "textareaMaxLength": 320
+        }
+      },
+      {
+        "name": "canonical_url",
+        "type": "text",
+        "label": "规范 URL",
+        "placeholder": "留空则使用 url_slug",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "robots_directive",
+        "type": "select",
+        "label": "Robots 指令",
+        "options": [
+          "index,follow",
+          "noindex,follow",
+          "noindex,nofollow"
+        ],
+        "defaultValue": "index,follow",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "og_image",
+        "type": "image",
+        "label": "社交分享图",
+        "ui": {
+          "group": "_seo"
+        }
+      },
+      {
+        "name": "schema_type",
+        "type": "select",
+        "label": "Schema 类型",
+        "options": [
+          "None",
+          "Article",
+          "Product",
+          "FAQPage",
+          "LocalBusiness",
+          "WebPage",
+          "Organization"
+        ],
+        "defaultValue": "None",
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "schema_mapping",
+        "type": "json",
+        "label": "Schema 字段映射",
+        "defaultValue": {
+          "headline": "${name}",
+          "description": "${summary}"
+        },
+        "ui": {
+          "group": "_schema"
+        }
+      },
+      {
+        "name": "geo_latitude",
+        "type": "text",
+        "label": "地理纬度",
+        "ui": {
+          "group": "_geo"
+        }
+      },
+      {
+        "name": "geo_longitude",
+        "type": "text",
+        "label": "地理经度",
+        "ui": {
+          "group": "_geo"
+        }
+      }
+    ]
+  },
+  {
+    "name": "翻译字段",
+    "slug": "translation_fields",
+    "description": "维护站点级翻译字段 JSON 配置，供多语言字段映射与文案生成场景使用。",
+    "fields": [
+      {
+        "name": "field_list",
+        "type": "json",
+        "label": "字段列表",
+        "required": true
+      }
+    ]
+  }
+]
