@@ -61089,7 +61089,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-yQYgS6US.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-CqiC741Z.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61105,7 +61105,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-yQYgS6US.js");
+  const { saveMemberTranslationsMap } = await import("./translations-CqiC741Z.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61672,7 +61672,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-yQYgS6US.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-CqiC741Z.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -62185,6 +62185,31 @@ async function getWorkerCustomDomains(env2) {
   const data = await res.json();
   return (data.result || []).map((row) => String(row.hostname || "")).filter(Boolean);
 }
+async function resolveMediaBucketName(env2) {
+  const fromEnv = String(env2.MEDIA_BUCKET_NAME || "").trim();
+  if (fromEnv) return fromEnv;
+  const token2 = String(env2.CF_API_TOKEN || "").trim();
+  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
+  const worker = String(env2.WORKER_NAME || "").trim();
+  if (token2 && accountId && worker) {
+    try {
+      const res = await fetch(
+        `${CF_API_BASE$1}/accounts/${accountId}/workers/scripts/${encodeURIComponent(worker)}/settings`,
+        { headers: { Authorization: `Bearer ${token2}` } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const hit = (data.result?.bindings || []).find(
+          (b) => b.type === "r2_bucket" && b.name === "MEDIA_BUCKET" && b.bucket_name
+        );
+        const name = String(hit?.bucket_name || "").trim();
+        if (name) return name;
+      }
+    } catch {
+    }
+  }
+  return "cizhenyu-r2-media";
+}
 async function getWorkerDomainsRaw(env2) {
   const token2 = requireToken(env2);
   const accountId = requireAccount(env2);
@@ -62295,7 +62320,7 @@ function isResourceDomainSlot(type2) {
 async function checkDomainHealth(env2, domain2, type2) {
   await verifyCfToken(env2);
   const host = normalizeHostname(domain2);
-  const bucketName = String(env2.MEDIA_BUCKET_NAME || "cizhenyu-media").trim();
+  const bucketName = await resolveMediaBucketName(env2);
   const discovered2 = isResourceDomainSlot(type2) ? await getR2CustomDomains(env2, bucketName) : await getWorkerCustomDomains(env2);
   if (!host) {
     return {
@@ -62368,7 +62393,7 @@ async function bindDomainSlot(env2, options) {
     fullDomain = `${fullDomain}.${main}`;
   }
   const zoneId = await getZoneId(env2, fullDomain);
-  const bucketName = String(env2.MEDIA_BUCKET_NAME || "cizhenyu-media").trim();
+  const bucketName = await resolveMediaBucketName(env2);
   const oldDomain = normalizeHostname(options.oldDomain || "");
   if (isResourceDomainSlot(options.type)) {
     if (oldDomain && oldDomain !== fullDomain) {
@@ -62403,6 +62428,7 @@ const cloudflare = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   isResourceDomainSlot,
   normalizeDomainSlotType,
   purgeCloudflareCacheTags,
+  resolveMediaBucketName,
   verifyCfToken
 }, Symbol.toStringTag, { value: "Module" }));
 const CF_API_BASE = "https://api.cloudflare.com/client/v4";
@@ -62612,7 +62638,7 @@ sitesRoutes.get("/domains/status", requireRule("sites.domains"), async (c) => {
         main_domain: domains.main_domain
       });
     }
-    const bucketName = String(c.env.MEDIA_BUCKET_NAME || "cizhenyu-media").trim();
+    const bucketName = await resolveMediaBucketName(envProxy);
     const [workerDomains, r2Domains] = await Promise.all([
       getWorkerCustomDomains(envProxy).catch(() => []),
       getR2CustomDomains(envProxy, bucketName).catch(() => [])
