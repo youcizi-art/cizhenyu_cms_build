@@ -1,6 +1,6 @@
 {
-  "_worker-entry-IoHWpIzt.js": {
-    "file": "assets/worker-entry-IoHWpIzt.js",
+  "_worker-entry-pGlSDfUJ.js": {
+    "file": "assets/worker-entry-pGlSDfUJ.js",
     "name": "worker-entry",
     "dynamicImports": [
       "src/modules/members/translations.ts",
@@ -9,12 +9,12 @@
     ]
   },
   "src/modules/members/translations.ts": {
-    "file": "assets/translations-DROlnyVd.js",
+    "file": "assets/translations-yQYgS6US.js",
     "name": "translations",
     "src": "src/modules/members/translations.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_worker-entry-IoHWpIzt.js"
+      "_worker-entry-pGlSDfUJ.js"
     ]
   },
   "virtual:cloudflare/worker-entry": {
@@ -23,7 +23,7 @@
     "src": "virtual:cloudflare/worker-entry",
     "isEntry": true,
     "imports": [
-      "_worker-entry-IoHWpIzt.js"
+      "_worker-entry-pGlSDfUJ.js"
     ]
   }
 }

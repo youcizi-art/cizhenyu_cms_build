@@ -54221,10 +54221,10 @@ function maskSecret$1(value) {
 function isMaskedSecret$1(value) {
   return String(value || "").includes("*");
 }
-async function getInfraCloudflare(db) {
+async function getInfraCloudflareRow(db) {
   const orm = createDb(db);
   const row = await orm.select({ value_json: siteSettings.valueJson }).from(siteSettings).where(eq(siteSettings.key, INFRA_CF_SETTINGS_KEY)).get();
-  if (!row?.value_json) return emptyInfraCloudflare();
+  if (!row?.value_json) return null;
   try {
     const parsed = JSON.parse(row.value_json);
     return {
@@ -54235,14 +54235,21 @@ async function getInfraCloudflare(db) {
     return emptyInfraCloudflare();
   }
 }
-async function saveInfraCloudflare(db, incoming) {
-  const previous = await getInfraCloudflare(db);
+async function getInfraCloudflare(db) {
+  return await getInfraCloudflareRow(db) || emptyInfraCloudflare();
+}
+async function saveInfraCloudflare(db, incoming, seedWhenEmpty) {
+  const previous = await getInfraCloudflareRow(db) || seedWhenEmpty || emptyInfraCloudflare();
   const next2 = {
-    accountId: String(incoming.accountId ?? previous.accountId).trim(),
-    apiToken: String(incoming.apiToken ?? previous.apiToken).trim()
+    accountId: incoming.accountId !== void 0 ? String(incoming.accountId || "").trim() : previous.accountId,
+    apiToken: previous.apiToken
   };
-  if (isMaskedSecret$1(incoming.apiToken) || !incoming.apiToken) {
-    next2.apiToken = previous.apiToken;
+  if (incoming.apiToken !== void 0) {
+    if (isMaskedSecret$1(incoming.apiToken)) {
+      next2.apiToken = previous.apiToken;
+    } else {
+      next2.apiToken = String(incoming.apiToken || "").trim();
+    }
   }
   const ts = Date.now();
   const orm = createDb(db);
@@ -54259,14 +54266,20 @@ async function saveInfraCloudflare(db, incoming) {
 async function resolveCloudflareCredentials(db, env2) {
   const envAccountId = String(env2.CF_ACCOUNT_ID || "").trim();
   const envApiToken = String(env2.CF_API_TOKEN || "").trim();
-  const stored = await getInfraCloudflare(db);
-  const accountId = envAccountId || stored.accountId;
-  const apiToken = envApiToken || stored.apiToken;
+  const stored = await getInfraCloudflareRow(db);
+  if (stored) {
+    return {
+      accountId: stored.accountId,
+      apiToken: stored.apiToken,
+      accountIdSource: "db",
+      apiTokenSource: "db"
+    };
+  }
   return {
-    accountId,
-    apiToken,
-    accountIdSource: envAccountId ? "env" : stored.accountId ? "db" : "none",
-    apiTokenSource: envApiToken ? "env" : stored.apiToken ? "db" : "none"
+    accountId: envAccountId,
+    apiToken: envApiToken,
+    accountIdSource: envAccountId ? "env" : "none",
+    apiTokenSource: envApiToken ? "env" : "none"
   };
 }
 function maskResolvedForClient(resolved) {
@@ -54275,8 +54288,9 @@ function maskResolvedForClient(resolved) {
     apiToken: maskSecret$1(resolved.apiToken),
     accountIdSource: resolved.accountIdSource,
     apiTokenSource: resolved.apiTokenSource,
-    accountIdEditable: resolved.accountIdSource !== "env",
-    apiTokenEditable: resolved.apiTokenSource !== "env"
+    // 始终可编辑：部署注入的 env 仅作初始值，用户可改可清空
+    accountIdEditable: true,
+    apiTokenEditable: true
   };
 }
 const AI_CONFIG_KEY = "ai_config";
@@ -61075,7 +61089,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-DROlnyVd.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-yQYgS6US.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61091,7 +61105,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-DROlnyVd.js");
+  const { saveMemberTranslationsMap } = await import("./translations-yQYgS6US.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61658,7 +61672,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-DROlnyVd.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-yQYgS6US.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -62851,16 +62865,20 @@ infraRoutes.get("/cloudflare", requireRule("settings.basic"), async (c) => {
 });
 infraRoutes.put("/cloudflare", requireRule("settings.basic.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const resolved = await resolveCloudflareCredentials(c.env.DB, c.env);
+  const current = await resolveCloudflareCredentials(c.env.DB, c.env);
   const patch = {};
-  if (resolved.accountIdSource !== "env" && body.accountId != null) {
-    patch.accountId = String(body.accountId || "").trim();
+  if (Object.prototype.hasOwnProperty.call(body, "accountId")) {
+    patch.accountId = String(body.accountId ?? "").trim();
   }
-  if (resolved.apiTokenSource !== "env" && body.apiToken != null) {
-    patch.apiToken = String(body.apiToken || "").trim();
+  if (Object.prototype.hasOwnProperty.call(body, "apiToken")) {
+    patch.apiToken = String(body.apiToken ?? "");
   }
   if (Object.keys(patch).length) {
-    await saveInfraCloudflare(c.env.DB, patch);
+    await saveInfraCloudflare(
+      c.env.DB,
+      patch,
+      { accountId: current.accountId, apiToken: current.apiToken }
+    );
   }
   const next2 = await resolveCloudflareCredentials(c.env.DB, c.env);
   return c.json({ message: "已保存", cloudflare: maskResolvedForClient(next2) });
