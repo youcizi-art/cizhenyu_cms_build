@@ -1,20 +1,30 @@
 {
-  "_worker-entry-BUYsgq73.js": {
-    "file": "assets/worker-entry-BUYsgq73.js",
+  "_worker-entry-yXZNPxBO.js": {
+    "file": "assets/worker-entry-yXZNPxBO.js",
     "name": "worker-entry",
     "dynamicImports": [
       "src/modules/members/translations.ts",
       "src/modules/members/translations.ts",
-      "src/modules/members/translations.ts"
+      "src/modules/members/translations.ts",
+      "src/modules/sites/revalidate-trigger.ts"
     ]
   },
   "src/modules/members/translations.ts": {
-    "file": "assets/translations-CqiC741Z.js",
+    "file": "assets/translations-B6g7UHnr.js",
     "name": "translations",
     "src": "src/modules/members/translations.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_worker-entry-BUYsgq73.js"
+      "_worker-entry-yXZNPxBO.js"
+    ]
+  },
+  "src/modules/sites/revalidate-trigger.ts": {
+    "file": "assets/revalidate-trigger-CA1jK9Ph.js",
+    "name": "revalidate-trigger",
+    "src": "src/modules/sites/revalidate-trigger.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_worker-entry-yXZNPxBO.js"
     ]
   },
   "virtual:cloudflare/worker-entry": {
@@ -23,7 +33,7 @@
     "src": "virtual:cloudflare/worker-entry",
     "isEntry": true,
     "imports": [
-      "_worker-entry-BUYsgq73.js"
+      "_worker-entry-yXZNPxBO.js"
     ]
   }
 }

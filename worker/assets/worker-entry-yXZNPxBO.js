@@ -61089,7 +61089,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-CqiC741Z.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-B6g7UHnr.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61105,7 +61105,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-CqiC741Z.js");
+  const { saveMemberTranslationsMap } = await import("./translations-B6g7UHnr.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61672,7 +61672,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-CqiC741Z.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-B6g7UHnr.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -62149,16 +62149,26 @@ async function handleApiError(res, context, preParsed) {
 }
 async function verifyCfToken(env2) {
   const token2 = requireToken(env2);
-  const res = await fetch(`${CF_API_BASE$1}/user/tokens/verify`, {
-    headers: { Authorization: `Bearer ${token2}` }
-  });
-  if (res.ok) return true;
-  const fallback = await fetch(`${CF_API_BASE$1}/zones?per_page=1`, {
-    headers: { Authorization: `Bearer ${token2}` }
-  });
-  if (fallback.ok) return true;
-  const errorData = await fallback.json().catch(() => ({}));
-  throw new Error(`[CF] Token 验证失败: ${JSON.stringify(errorData.errors || "Unauthorized")}`);
+  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
+  const headers = { Authorization: `Bearer ${token2}` };
+  const verifyRes = await fetch(`${CF_API_BASE$1}/user/tokens/verify`, { headers });
+  if (verifyRes.ok) return true;
+  const zonesRes = await fetch(`${CF_API_BASE$1}/zones?per_page=1`, { headers });
+  if (zonesRes.ok) return true;
+  if (accountId) {
+    const accRes = await fetch(`${CF_API_BASE$1}/accounts/${accountId}`, { headers });
+    if (accRes.ok) return true;
+    const workersRes = await fetch(
+      `${CF_API_BASE$1}/accounts/${accountId}/workers/scripts?per_page=1`,
+      { headers }
+    );
+    if (workersRes.ok) return true;
+  }
+  const errBody = await zonesRes.json().catch(() => ({}));
+  const detail = JSON.stringify(errBody.errors || "Unauthorized");
+  throw new Error(
+    `[CF] Token 验证失败: ${detail}。若为部署注入的 OAuth 令牌已过期，请到「基础设置 → Cloudflare」用「创建 API Token」生成新令牌并保存（勿手改权限项）。`
+  );
 }
 async function getZoneId(env2, domain2) {
   const override = String(env2.CF_ZONE_ID || "").trim();
@@ -62181,7 +62191,12 @@ async function getWorkerCustomDomains(env2) {
   const res = await fetch(`${CF_API_BASE$1}/accounts/${accountId}/workers/domains`, {
     headers: { Authorization: `Bearer ${token2}` }
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      await handleApiError(res, "列出 Worker 自定义域名失败（Token 权限不足或已过期）");
+    }
+    return [];
+  }
   const data = await res.json();
   return (data.result || []).map((row) => String(row.hostname || "")).filter(Boolean);
 }
@@ -62770,6 +62785,30 @@ sitesRoutes.put("/frontend", requireRule("sites.frontend.edit"), async (c) => {
     return c.json({ error: err instanceof Error ? err.message : "保存失败" }, 400);
   }
 });
+sitesRoutes.post("/frontend/:id/revalidate", requireRule("sites.frontend.edit"), async (c) => {
+  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-CA1jK9Ph.js");
+  const body = await c.req.json().catch(() => ({}));
+  const paths = Array.isArray(body.paths) ? body.paths.map(String) : void 0;
+  const collections2 = Array.isArray(body.collections) ? body.collections.map(String) : void 0;
+  const creds = await resolveCloudflareCredentials(c.env.DB, c.env);
+  const result = await triggerFrontendSiteRevalidate(c.env.DB, {
+    siteId: c.req.param("id") || "",
+    purge: body.purge != null ? String(body.purge) : void 0,
+    paths,
+    collections: collections2,
+    cfEnv: {
+      CF_API_TOKEN: creds.apiToken,
+      CF_ACCOUNT_ID: creds.accountId
+    }
+  });
+  if (!result.ok) {
+    return c.json({ error: result.error || "刷新失败", detail: result }, 400);
+  }
+  return c.json({
+    message: result.message || "已请求前端刷新缓存",
+    ...result
+  });
+});
 sitesRoutes.get("/dns-check", requireRule("sites.domains"), async (c) => {
   const domain2 = String(c.req.query("domain") || "").trim();
   const type2 = normalizeDomainSlotType(String(c.req.query("type") || "api"));
@@ -63011,8 +63050,11 @@ app.all("*", async (c) => {
 });
 const workerEntry = app ?? {};
 export {
+  getFrontendSites as a,
   createDb as c,
   eq as e,
+  getZoneId as g,
+  normalizeHostname as n,
   siteSettings as s,
   workerEntry as w
 };
