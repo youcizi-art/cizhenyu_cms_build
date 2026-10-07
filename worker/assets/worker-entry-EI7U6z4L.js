@@ -54268,11 +54268,13 @@ async function resolveCloudflareCredentials(db, env2) {
   const envApiToken = String(env2.CF_API_TOKEN || "").trim();
   const stored = await getInfraCloudflareRow(db);
   if (stored) {
+    const accountId = stored.accountId || envAccountId;
+    const apiToken = stored.apiToken || envApiToken;
     return {
-      accountId: stored.accountId,
-      apiToken: stored.apiToken,
-      accountIdSource: "db",
-      apiTokenSource: "db"
+      accountId,
+      apiToken,
+      accountIdSource: stored.accountId ? "db" : envAccountId ? "env" : "none",
+      apiTokenSource: stored.apiToken ? "db" : envApiToken ? "env" : "none"
     };
   }
   return {
@@ -56733,6 +56735,203 @@ async function migrateMemberMenuGrants(db) {
     await attachRuleNamesToRole(db, row.roleId, LEGACY_CHILD_RULES);
   }
 }
+function normalizeHostname(hostname) {
+  return String(hostname || "").trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0].split(":")[0].replace(/^\.+|\.+$/g, "");
+}
+function extractRootDomain(hostname) {
+  const host = normalizeHostname(hostname);
+  if (!host) return "";
+  const parts = host.split(".").filter(Boolean);
+  if (parts.length <= 2) return host;
+  return parts.slice(-2).join(".");
+}
+const CF_API_BASE$1 = "https://api.cloudflare.com/client/v4";
+const MAX_WIDGET_DOMAINS = 10;
+function isWorkersDevHostname(hostname) {
+  const host = normalizeHostname(hostname);
+  if (!host.endsWith(".workers.dev")) return false;
+  const prefix2 = host.slice(0, -".workers.dev".length);
+  return prefix2.split(".").filter(Boolean).length >= 2;
+}
+function hostnameForTurnstileWidget(hostname) {
+  const host = normalizeHostname(hostname);
+  if (!host) return "";
+  if (host === "localhost" || host === "127.0.0.1") return host;
+  if (isWorkersDevHostname(host)) return host;
+  const root = extractRootDomain(host);
+  if (root === "workers.dev") return host;
+  return root || host;
+}
+function collectTurnstileHostnamesFromSiteDomains(domains) {
+  if (!domains) return [];
+  const raw = [
+    domains.main_domain,
+    domains.admin_domain,
+    domains.api_domain,
+    domains.member_domain
+  ];
+  return [...new Set(
+    raw.map((item) => hostnameForTurnstileWidget(String(item || ""))).filter(Boolean)
+  )];
+}
+function needsRequiredTurnstileSync(domains) {
+  if (!domains) return false;
+  return Boolean(
+    String(domains.admin_domain || "").trim() || String(domains.member_domain || "").trim()
+  );
+}
+function mergeTurnstileDomainList(existing, toAdd) {
+  const wanted = toAdd.map((item) => hostnameForTurnstileWidget(item)).filter(Boolean);
+  const seed = [
+    ...existing.map((item) => normalizeHostname(item)).filter(Boolean),
+    ...wanted
+  ];
+  const unique = [...new Set(seed)].filter((host) => host !== "workers.dev");
+  const kept = unique.filter((host) => {
+    if (isWorkersDevHostname(host)) return true;
+    return !unique.some(
+      (other) => other !== host && !isWorkersDevHostname(other) && host.endsWith(`.${other}`)
+    );
+  });
+  kept.sort((a, b) => {
+    const aw = isWorkersDevHostname(a) ? 0 : 1;
+    const bw = isWorkersDevHostname(b) ? 0 : 1;
+    if (aw !== bw) return aw - bw;
+    return a.split(".").length - b.split(".").length || a.localeCompare(b);
+  });
+  if (kept.length <= MAX_WIDGET_DOMAINS) return kept;
+  const priority = new Set(wanted);
+  const preferred = kept.filter((host) => priority.has(host) || isWorkersDevHostname(host));
+  const rest = kept.filter((host) => !preferred.includes(host));
+  return [...preferred, ...rest].slice(0, MAX_WIDGET_DOMAINS);
+}
+async function fetchWorkersAccountSubdomain(env2) {
+  const token2 = String(env2.CF_API_TOKEN || "").trim();
+  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
+  if (!token2 || !accountId) return "";
+  const res = await fetch(`${CF_API_BASE$1}/accounts/${accountId}/workers/subdomain`, {
+    headers: { Authorization: `Bearer ${token2}` }
+  });
+  if (!res.ok) return "";
+  const data = await res.json();
+  return String(data.result?.subdomain || "").trim().toLowerCase();
+}
+function formatWorkersDevHostname(workerName, accountSubdomain) {
+  const name = String(workerName || "").trim().toLowerCase();
+  const sub = String(accountSubdomain || "").trim().toLowerCase();
+  if (!name || !sub) return "";
+  return `${name}.${sub}.workers.dev`;
+}
+async function resolveWorkersDevHostname(env2) {
+  const worker = String(env2.WORKER_NAME || "").trim().toLowerCase();
+  if (!worker) return "";
+  const sub = await fetchWorkersAccountSubdomain(env2);
+  return formatWorkersDevHostname(worker, sub);
+}
+function classifyHttpFailure(kind, status) {
+  if (status === 401 || status === 403) return "permission-denied";
+  return `${kind}-widget-${status}`;
+}
+async function putWidgetDomains(env2, sitekey, widget, next2) {
+  const token2 = String(env2.CF_API_TOKEN || "").trim();
+  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
+  const headers = {
+    Authorization: `Bearer ${token2}`,
+    "Content-Type": "application/json"
+  };
+  const mode = String(widget.mode || "managed");
+  const name = String(widget.name || "CMS Turnstile").trim() || "CMS Turnstile";
+  const body = { domains: next2, mode, name };
+  if (typeof widget.bot_fight_mode === "boolean") body.bot_fight_mode = widget.bot_fight_mode;
+  if (widget.clearance_level) body.clearance_level = widget.clearance_level;
+  if (typeof widget.ephemeral_id === "boolean") body.ephemeral_id = widget.ephemeral_id;
+  if (typeof widget.offlabel === "boolean") body.offlabel = widget.offlabel;
+  const putRes = await fetch(
+    `${CF_API_BASE$1}/accounts/${accountId}/challenges/widgets/${encodeURIComponent(sitekey)}`,
+    { method: "PUT", headers, body: JSON.stringify(body) }
+  );
+  if (!putRes.ok) {
+    return { ok: false, reason: classifyHttpFailure("put", putRes.status), domains: next2 };
+  }
+  return { ok: true, domains: next2 };
+}
+async function ensureTurnstileWidgetDomains(env2, options = {}) {
+  const sitekey = String(env2.TURNSTILE_ADMIN_SITE_KEY || "").trim();
+  if (!sitekey || sitekey === TURNSTILE_DUMMY_SITE_KEY) {
+    return { ok: true, skipped: true, reason: "no-sitekey" };
+  }
+  const token2 = String(env2.CF_API_TOKEN || "").trim();
+  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
+  if (!token2 || !accountId) {
+    return { ok: false, skipped: false, reason: "no-cf-credentials" };
+  }
+  const fromSites = collectTurnstileHostnamesFromSiteDomains(options.siteDomains);
+  const extras = (options.extraHostnames || []).map((item) => hostnameForTurnstileWidget(item)).filter(Boolean);
+  const workersDev = await resolveWorkersDevHostname(env2);
+  const targets = [...new Set([...fromSites, ...extras, workersDev].filter(Boolean))];
+  if (targets.length === 0) {
+    return { ok: true, skipped: true, reason: "no-hosts" };
+  }
+  const getRes = await fetch(
+    `${CF_API_BASE$1}/accounts/${accountId}/challenges/widgets/${encodeURIComponent(sitekey)}`,
+    { headers: { Authorization: `Bearer ${token2}` } }
+  );
+  if (!getRes.ok) {
+    return { ok: false, reason: classifyHttpFailure("get", getRes.status) };
+  }
+  const getData = await getRes.json();
+  const widget = getData.result || {};
+  const current = (widget.domains || []).map((item) => normalizeHostname(String(item || ""))).filter(Boolean);
+  const next2 = mergeTurnstileDomainList(current, targets);
+  const unchanged = next2.length === current.length && next2.every((host) => current.includes(host)) && current.every((host) => next2.includes(host));
+  if (unchanged) {
+    return { ok: true, skipped: true, reason: "already-present", domains: current };
+  }
+  return putWidgetDomains(env2, sitekey, widget, next2);
+}
+function turnstileSyncUserError(result) {
+  if (result.ok) return null;
+  const reason = String(result.reason || "");
+  if (reason === "no-sitekey" || reason === "no-hosts" || reason === "already-present") {
+    return null;
+  }
+  if (reason === "no-cf-credentials") {
+    return "未配置 Cloudflare API Token。请到「系统设置 → 基础配置」用「创建 API Token」生成并保存（已预填 Turnstile 权限）；保存/绑定域名时系统会自动写入人机验证主机名，无需到 Cloudflare 控制台手工配置。";
+  }
+  if (reason === "permission-denied" || reason.includes("401") || reason.includes("403")) {
+    return "Cloudflare API Token 缺少 Turnstile 编辑权限或已过期。请到「系统设置 → 基础配置」点击「创建 API Token」重新生成并保存；系统会在保存/绑定域名时自动同步人机验证主机名，无需到 Cloudflare 控制台手工配置。";
+  }
+  return `人机验证域名自动同步失败（${reason || "unknown"}）。请检查基础配置中的 API Token 后重试保存/绑定；系统会自动写入主机名，无需到 Cloudflare 控制台手工配置。`;
+}
+async function syncTurnstileAllowlistOnBoot(env2) {
+  try {
+    const domains = await getSiteDomains(env2.DB);
+    if (!domains.admin_domain && !domains.member_domain && !domains.main_domain) {
+      return;
+    }
+    const creds = await resolveCloudflareCredentials(env2.DB, env2);
+    if (!creds.apiToken || !creds.accountId) return;
+    const result = await ensureTurnstileWidgetDomains(
+      {
+        CF_API_TOKEN: creds.apiToken,
+        CF_ACCOUNT_ID: creds.accountId,
+        TURNSTILE_ADMIN_SITE_KEY: env2.TURNSTILE_ADMIN_SITE_KEY,
+        WORKER_NAME: env2.WORKER_NAME
+      },
+      { siteDomains: domains }
+    );
+    if (!result.ok && !result.skipped) {
+      console.warn(
+        `[boot] Turnstile 白名单同步失败: ${result.reason || "unknown"}（需 Token 含 Turnstile Edit）`
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "[boot] Turnstile 白名单同步异常:",
+      err instanceof Error ? err.message : err
+    );
+  }
+}
 const BOOT_STATE_KEY = "system:boot_state";
 function computeStaticFingerprint() {
   const schemaTag = `patches:${COLUMN_PATCHES.map((p) => `${p.table}.${p.column}`).join(",")}`;
@@ -56790,6 +56989,7 @@ async function runFullBoot(env2) {
   await reconcileEnabledPlugins(env2.DB);
   await ensureDefaultAdmin(env2.DB, env2);
   await ensureSiteDomainsForRuntime(env2.DB, env2);
+  await syncTurnstileAllowlistOnBoot(env2);
   const dynamicFingerprint = await computeDynamicFingerprint(env2.DB);
   await writeBootState(env2.DB, {
     staticFingerprint: computeStaticFingerprint(),
@@ -56809,6 +57009,7 @@ async function bootDb(env2) {
         const dynamicFingerprint = await computeDynamicFingerprint(env2.DB);
         if (dynamicFingerprint === prev2.dynamicFingerprint) {
           await ensureSiteDomainsForRuntime(env2.DB, env2);
+          await syncTurnstileAllowlistOnBoot(env2);
           return env2.DB;
         }
       } catch {
@@ -61089,7 +61290,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-B6g7UHnr.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-kGPKWLFk.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61105,7 +61306,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-B6g7UHnr.js");
+  const { saveMemberTranslationsMap } = await import("./translations-kGPKWLFk.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61672,7 +61873,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-B6g7UHnr.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-kGPKWLFk.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -62110,17 +62311,7 @@ dbAdminRoutes.post("/execute", async (c) => {
     return c.json({ error: err instanceof Error ? err.message : "执行失败" }, 500);
   }
 });
-function normalizeHostname(hostname) {
-  return String(hostname || "").trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0].split(":")[0].replace(/^\.+|\.+$/g, "");
-}
-function extractRootDomain(hostname) {
-  const host = normalizeHostname(hostname);
-  if (!host) return "";
-  const parts = host.split(".").filter(Boolean);
-  if (parts.length <= 2) return host;
-  return parts.slice(-2).join(".");
-}
-const CF_API_BASE$1 = "https://api.cloudflare.com/client/v4";
+const CF_API_BASE = "https://api.cloudflare.com/client/v4";
 function requireToken(env2) {
   const token2 = String(env2.CF_API_TOKEN || "").trim();
   if (!token2) {
@@ -62151,15 +62342,15 @@ async function verifyCfToken(env2) {
   const token2 = requireToken(env2);
   const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
   const headers = { Authorization: `Bearer ${token2}` };
-  const verifyRes = await fetch(`${CF_API_BASE$1}/user/tokens/verify`, { headers });
+  const verifyRes = await fetch(`${CF_API_BASE}/user/tokens/verify`, { headers });
   if (verifyRes.ok) return true;
-  const zonesRes = await fetch(`${CF_API_BASE$1}/zones?per_page=1`, { headers });
+  const zonesRes = await fetch(`${CF_API_BASE}/zones?per_page=1`, { headers });
   if (zonesRes.ok) return true;
   if (accountId) {
-    const accRes = await fetch(`${CF_API_BASE$1}/accounts/${accountId}`, { headers });
+    const accRes = await fetch(`${CF_API_BASE}/accounts/${accountId}`, { headers });
     if (accRes.ok) return true;
     const workersRes = await fetch(
-      `${CF_API_BASE$1}/accounts/${accountId}/workers/scripts?per_page=1`,
+      `${CF_API_BASE}/accounts/${accountId}/workers/scripts?per_page=1`,
       { headers }
     );
     if (workersRes.ok) return true;
@@ -62176,7 +62367,7 @@ async function getZoneId(env2, domain2) {
   const token2 = requireToken(env2);
   const rootDomain = extractRootDomain(domain2);
   if (!rootDomain) throw new Error(`域名无效: ${domain2}`);
-  const res = await fetch(`${CF_API_BASE$1}/zones?name=${encodeURIComponent(rootDomain)}`, {
+  const res = await fetch(`${CF_API_BASE}/zones?name=${encodeURIComponent(rootDomain)}`, {
     headers: { Authorization: `Bearer ${token2}` }
   });
   const data = await res.json();
@@ -62188,7 +62379,7 @@ async function getZoneId(env2, domain2) {
 async function getWorkerCustomDomains(env2) {
   const token2 = requireToken(env2);
   const accountId = requireAccount(env2);
-  const res = await fetch(`${CF_API_BASE$1}/accounts/${accountId}/workers/domains`, {
+  const res = await fetch(`${CF_API_BASE}/accounts/${accountId}/workers/domains`, {
     headers: { Authorization: `Bearer ${token2}` }
   });
   if (!res.ok) {
@@ -62209,7 +62400,7 @@ async function resolveMediaBucketName(env2) {
   if (token2 && accountId && worker) {
     try {
       const res = await fetch(
-        `${CF_API_BASE$1}/accounts/${accountId}/workers/scripts/${encodeURIComponent(worker)}/settings`,
+        `${CF_API_BASE}/accounts/${accountId}/workers/scripts/${encodeURIComponent(worker)}/settings`,
         { headers: { Authorization: `Bearer ${token2}` } }
       );
       if (res.ok) {
@@ -62228,7 +62419,7 @@ async function resolveMediaBucketName(env2) {
 async function getWorkerDomainsRaw(env2) {
   const token2 = requireToken(env2);
   const accountId = requireAccount(env2);
-  const res = await fetch(`${CF_API_BASE$1}/accounts/${accountId}/workers/domains`, {
+  const res = await fetch(`${CF_API_BASE}/accounts/${accountId}/workers/domains`, {
     headers: { Authorization: `Bearer ${token2}` }
   });
   if (!res.ok) return [];
@@ -62239,7 +62430,7 @@ async function bindWorkerDomain(env2, zoneId, hostname) {
   const token2 = requireToken(env2);
   const accountId = requireAccount(env2);
   const service = String(env2.WORKER_NAME || "cizhenyu").trim() || "cizhenyu";
-  const res = await fetch(`${CF_API_BASE$1}/accounts/${accountId}/workers/domains`, {
+  const res = await fetch(`${CF_API_BASE}/accounts/${accountId}/workers/domains`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token2}`,
@@ -62266,7 +62457,7 @@ async function deleteWorkerDomain(env2, hostname) {
   const all = await getWorkerDomainsRaw(env2);
   const target = all.find((row) => row.hostname === hostname);
   if (!target) return true;
-  const res = await fetch(`${CF_API_BASE$1}/accounts/${accountId}/workers/domains/${target.id}`, {
+  const res = await fetch(`${CF_API_BASE}/accounts/${accountId}/workers/domains/${target.id}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token2}` }
   });
@@ -62277,7 +62468,7 @@ async function getR2CustomDomains(env2, bucketName) {
   const token2 = requireToken(env2);
   const accountId = requireAccount(env2);
   const res = await fetch(
-    `${CF_API_BASE$1}/accounts/${accountId}/r2/buckets/${bucketName}/domains/custom`,
+    `${CF_API_BASE}/accounts/${accountId}/r2/buckets/${bucketName}/domains/custom`,
     { headers: { Authorization: `Bearer ${token2}` } }
   );
   if (!res.ok) return [];
@@ -62288,7 +62479,7 @@ async function bindR2Domain(env2, bucketName, domain2, zoneId) {
   const token2 = requireToken(env2);
   const accountId = requireAccount(env2);
   const res = await fetch(
-    `${CF_API_BASE$1}/accounts/${accountId}/r2/buckets/${bucketName}/domains/custom`,
+    `${CF_API_BASE}/accounts/${accountId}/r2/buckets/${bucketName}/domains/custom`,
     {
       method: "POST",
       headers: {
@@ -62312,7 +62503,7 @@ async function deleteR2Domain(env2, bucketName, domain2) {
   const token2 = requireToken(env2);
   const accountId = requireAccount(env2);
   const res = await fetch(
-    `${CF_API_BASE$1}/accounts/${accountId}/r2/buckets/${bucketName}/domains/custom/${domain2}`,
+    `${CF_API_BASE}/accounts/${accountId}/r2/buckets/${bucketName}/domains/custom/${domain2}`,
     {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token2}` }
@@ -62386,7 +62577,7 @@ async function purgeCloudflareCacheTags(env2, tags) {
       return { ok: false, skipped: true, reason: "zone-resolve-failed" };
     }
   }
-  const res = await fetch(`${CF_API_BASE$1}/zones/${zoneId}/purge_cache`, {
+  const res = await fetch(`${CF_API_BASE}/zones/${zoneId}/purge_cache`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token2}`,
@@ -62446,164 +62637,6 @@ const cloudflare = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   resolveMediaBucketName,
   verifyCfToken
 }, Symbol.toStringTag, { value: "Module" }));
-const CF_API_BASE = "https://api.cloudflare.com/client/v4";
-const MAX_WIDGET_DOMAINS = 10;
-function isWorkersDevHostname(hostname) {
-  const host = normalizeHostname(hostname);
-  if (!host.endsWith(".workers.dev")) return false;
-  const prefix2 = host.slice(0, -".workers.dev".length);
-  return prefix2.split(".").filter(Boolean).length >= 2;
-}
-function hostnameForTurnstileWidget(hostname) {
-  const host = normalizeHostname(hostname);
-  if (!host) return "";
-  if (host === "localhost" || host === "127.0.0.1") return host;
-  if (isWorkersDevHostname(host)) return host;
-  const root = extractRootDomain(host);
-  if (root === "workers.dev") return host;
-  return root || host;
-}
-function collectTurnstileHostnamesFromSiteDomains(domains) {
-  if (!domains) return [];
-  const raw = [
-    domains.main_domain,
-    domains.admin_domain,
-    domains.api_domain,
-    domains.member_domain
-  ];
-  return [...new Set(
-    raw.map((item) => hostnameForTurnstileWidget(String(item || ""))).filter(Boolean)
-  )];
-}
-function needsRequiredTurnstileSync(domains) {
-  if (!domains) return false;
-  return Boolean(
-    String(domains.admin_domain || "").trim() || String(domains.member_domain || "").trim()
-  );
-}
-function mergeTurnstileDomainList(existing, toAdd) {
-  const wanted = toAdd.map((item) => hostnameForTurnstileWidget(item)).filter(Boolean);
-  const seed = [
-    ...existing.map((item) => normalizeHostname(item)).filter(Boolean),
-    ...wanted
-  ];
-  const unique = [...new Set(seed)].filter((host) => host !== "workers.dev");
-  const kept = unique.filter((host) => {
-    if (isWorkersDevHostname(host)) return true;
-    return !unique.some(
-      (other) => other !== host && !isWorkersDevHostname(other) && host.endsWith(`.${other}`)
-    );
-  });
-  kept.sort((a, b) => {
-    const aw = isWorkersDevHostname(a) ? 0 : 1;
-    const bw = isWorkersDevHostname(b) ? 0 : 1;
-    if (aw !== bw) return aw - bw;
-    return a.split(".").length - b.split(".").length || a.localeCompare(b);
-  });
-  if (kept.length <= MAX_WIDGET_DOMAINS) return kept;
-  const priority = new Set(wanted);
-  const preferred = kept.filter((host) => priority.has(host) || isWorkersDevHostname(host));
-  const rest = kept.filter((host) => !preferred.includes(host));
-  return [...preferred, ...rest].slice(0, MAX_WIDGET_DOMAINS);
-}
-async function fetchWorkersAccountSubdomain(env2) {
-  const token2 = String(env2.CF_API_TOKEN || "").trim();
-  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
-  if (!token2 || !accountId) return "";
-  const res = await fetch(`${CF_API_BASE}/accounts/${accountId}/workers/subdomain`, {
-    headers: { Authorization: `Bearer ${token2}` }
-  });
-  if (!res.ok) return "";
-  const data = await res.json();
-  return String(data.result?.subdomain || "").trim().toLowerCase();
-}
-function formatWorkersDevHostname(workerName, accountSubdomain) {
-  const name = String(workerName || "").trim().toLowerCase();
-  const sub = String(accountSubdomain || "").trim().toLowerCase();
-  if (!name || !sub) return "";
-  return `${name}.${sub}.workers.dev`;
-}
-async function resolveWorkersDevHostname(env2) {
-  const worker = String(env2.WORKER_NAME || "").trim().toLowerCase();
-  if (!worker) return "";
-  const sub = await fetchWorkersAccountSubdomain(env2);
-  return formatWorkersDevHostname(worker, sub);
-}
-function classifyHttpFailure(kind, status) {
-  if (status === 401 || status === 403) return "permission-denied";
-  return `${kind}-widget-${status}`;
-}
-async function putWidgetDomains(env2, sitekey, widget, next2) {
-  const token2 = String(env2.CF_API_TOKEN || "").trim();
-  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
-  const headers = {
-    Authorization: `Bearer ${token2}`,
-    "Content-Type": "application/json"
-  };
-  const mode = String(widget.mode || "managed");
-  const name = String(widget.name || "CMS Turnstile").trim() || "CMS Turnstile";
-  const body = { domains: next2, mode, name };
-  if (typeof widget.bot_fight_mode === "boolean") body.bot_fight_mode = widget.bot_fight_mode;
-  if (widget.clearance_level) body.clearance_level = widget.clearance_level;
-  if (typeof widget.ephemeral_id === "boolean") body.ephemeral_id = widget.ephemeral_id;
-  if (typeof widget.offlabel === "boolean") body.offlabel = widget.offlabel;
-  const putRes = await fetch(
-    `${CF_API_BASE}/accounts/${accountId}/challenges/widgets/${encodeURIComponent(sitekey)}`,
-    { method: "PUT", headers, body: JSON.stringify(body) }
-  );
-  if (!putRes.ok) {
-    return { ok: false, reason: classifyHttpFailure("put", putRes.status), domains: next2 };
-  }
-  return { ok: true, domains: next2 };
-}
-async function ensureTurnstileWidgetDomains(env2, options = {}) {
-  const sitekey = String(env2.TURNSTILE_ADMIN_SITE_KEY || "").trim();
-  if (!sitekey || sitekey === TURNSTILE_DUMMY_SITE_KEY) {
-    return { ok: true, skipped: true, reason: "no-sitekey" };
-  }
-  const token2 = String(env2.CF_API_TOKEN || "").trim();
-  const accountId = String(env2.CF_ACCOUNT_ID || "").trim();
-  if (!token2 || !accountId) {
-    return { ok: false, skipped: false, reason: "no-cf-credentials" };
-  }
-  const fromSites = collectTurnstileHostnamesFromSiteDomains(options.siteDomains);
-  const extras = (options.extraHostnames || []).map((item) => hostnameForTurnstileWidget(item)).filter(Boolean);
-  const workersDev = await resolveWorkersDevHostname(env2);
-  const targets = [...new Set([...fromSites, ...extras, workersDev].filter(Boolean))];
-  if (targets.length === 0) {
-    return { ok: true, skipped: true, reason: "no-hosts" };
-  }
-  const getRes = await fetch(
-    `${CF_API_BASE}/accounts/${accountId}/challenges/widgets/${encodeURIComponent(sitekey)}`,
-    { headers: { Authorization: `Bearer ${token2}` } }
-  );
-  if (!getRes.ok) {
-    return { ok: false, reason: classifyHttpFailure("get", getRes.status) };
-  }
-  const getData = await getRes.json();
-  const widget = getData.result || {};
-  const current = (widget.domains || []).map((item) => normalizeHostname(String(item || ""))).filter(Boolean);
-  const next2 = mergeTurnstileDomainList(current, targets);
-  const unchanged = next2.length === current.length && next2.every((host) => current.includes(host)) && current.every((host) => next2.includes(host));
-  if (unchanged) {
-    return { ok: true, skipped: true, reason: "already-present", domains: current };
-  }
-  return putWidgetDomains(env2, sitekey, widget, next2);
-}
-function turnstileSyncUserError(result) {
-  if (result.ok) return null;
-  const reason = String(result.reason || "");
-  if (reason === "no-sitekey" || reason === "no-hosts" || reason === "already-present") {
-    return null;
-  }
-  if (reason === "no-cf-credentials") {
-    return "未配置 Cloudflare API Token。请到「系统设置 → 基础配置」填写后重试；创建 Token 时须包含 Turnstile Sites 编辑权限。";
-  }
-  if (reason === "permission-denied" || reason.includes("401") || reason.includes("403")) {
-    return "Cloudflare API Token 缺少 Turnstile Sites 编辑权限。请到「系统设置 → 基础配置」点击「创建 API Token」重新授权（已预填 Turnstile 权限），或在现有 Token 中勾选 Account → Turnstile → Edit。";
-  }
-  return `Turnstile 白名单同步失败（${reason || "unknown"}）。管理/会员域名绑定需要成功写入人机验证主机名。`;
-}
 async function syncTurnstileForDomains(env2, domains, extraHostnames = []) {
   return ensureTurnstileWidgetDomains(env2, { siteDomains: domains, extraHostnames }).catch((err) => ({
     ok: false,
@@ -62786,7 +62819,7 @@ sitesRoutes.put("/frontend", requireRule("sites.frontend.edit"), async (c) => {
   }
 });
 sitesRoutes.post("/frontend/:id/revalidate", requireRule("sites.frontend.edit"), async (c) => {
-  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-CA1jK9Ph.js");
+  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-caG7ePw2.js");
   const body = await c.req.json().catch(() => ({}));
   const paths = Array.isArray(body.paths) ? body.paths.map(String) : void 0;
   const collections2 = Array.isArray(body.collections) ? body.collections.map(String) : void 0;
