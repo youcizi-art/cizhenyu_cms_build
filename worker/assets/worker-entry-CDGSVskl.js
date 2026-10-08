@@ -9978,10 +9978,20 @@ async function listPlugins(db) {
   }
   return items.sort((a, b) => a.slug.localeCompare(b.slug));
 }
+let enabledSlugsCache = null;
+function invalidatePluginEnabledCache() {
+  enabledSlugsCache = null;
+}
 async function isPluginEnabled(db, slug) {
+  const nowTs = Date.now();
+  if (enabledSlugsCache && enabledSlugsCache.expiresAt > nowTs) {
+    return enabledSlugsCache.slugs.has(slug);
+  }
   const orm = createDb(db);
-  const row = await orm.select({ is_enabled: plugins.isEnabled }).from(plugins).where(eq(plugins.slug, slug)).get();
-  return row?.is_enabled === 1;
+  const rows = await orm.select({ slug: plugins.slug, is_enabled: plugins.isEnabled }).from(plugins).all();
+  const set2 = new Set(rows.filter((r2) => r2.is_enabled === 1).map((r2) => r2.slug));
+  enabledSlugsCache = { slugs: set2, expiresAt: nowTs + 6e4 };
+  return set2.has(slug);
 }
 async function listEnabledPluginSlugs(db) {
   const list = await listPlugins(db);
@@ -10074,6 +10084,7 @@ async function setPluginEnabled(db, slug, enabled) {
     await syncPluginPermissions(db, def.manifest, false);
     if (def.onDisable) await def.onDisable(db);
   }
+  invalidatePluginEnabledCache();
   return { ok: true, enabled };
 }
 async function reconcileEnabledPlugins(db) {
@@ -52460,7 +52471,7 @@ const __vite_glob_0_0 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.def
   unregisterExtByIdForTests,
   useEnabledPluginSlugs
 }, Symbol.toStringTag, { value: "Module" }));
-async function checkRateLimit(kv, key, limit, windowSeconds) {
+async function checkRateLimit(kv, key, limit, windowSeconds, options) {
   if (!kv) return { success: true, remaining: limit };
   const kvKey = `rl:${key}`;
   const now2 = Date.now();
@@ -52493,8 +52504,13 @@ async function checkRateLimit(kv, key, limit, windowSeconds) {
   }
   const nextCount = count2 + 1;
   const ttl = Math.max(1, Math.ceil((resetAt - now2) / 1e3));
+  const payload = JSON.stringify({ count: nextCount, resetAt });
+  if (options?.asyncWrite) {
+    const writePromise = kv.put(kvKey, payload, { expirationTtl: ttl }).then(() => void 0).catch(() => void 0);
+    return { success: true, remaining: Math.max(0, limit - nextCount), writePromise };
+  }
   try {
-    await kv.put(kvKey, JSON.stringify({ count: nextCount, resetAt }), { expirationTtl: ttl });
+    await kv.put(kvKey, payload, { expirationTtl: ttl });
   } catch {
     return { success: true, remaining: Math.max(0, limit - nextCount) };
   }
@@ -56989,7 +57005,7 @@ async function runFullBoot(env2) {
   await reconcileEnabledPlugins(env2.DB);
   await ensureDefaultAdmin(env2.DB, env2);
   await ensureSiteDomainsForRuntime(env2.DB, env2);
-  await syncTurnstileAllowlistOnBoot(env2);
+  void syncTurnstileAllowlistOnBoot(env2);
   const dynamicFingerprint = await computeDynamicFingerprint(env2.DB);
   await writeBootState(env2.DB, {
     staticFingerprint: computeStaticFingerprint(),
@@ -57009,7 +57025,7 @@ async function bootDb(env2) {
         const dynamicFingerprint = await computeDynamicFingerprint(env2.DB);
         if (dynamicFingerprint === prev2.dynamicFingerprint) {
           await ensureSiteDomainsForRuntime(env2.DB, env2);
-          await syncTurnstileAllowlistOnBoot(env2);
+          void syncTurnstileAllowlistOnBoot(env2);
           return env2.DB;
         }
       } catch {
@@ -58055,9 +58071,19 @@ const navGroupSelect = {
 function now$5() {
   return Date.now();
 }
+let navGroupsCache = null;
+function invalidateNavGroupsCache() {
+  navGroupsCache = null;
+}
 async function listNavGroups(db) {
+  const nowTs = Date.now();
+  if (navGroupsCache && navGroupsCache.expiresAt > nowTs) {
+    return navGroupsCache.rows;
+  }
   const orm = createDb(db);
-  return orm.select(navGroupSelect).from(navGroups).orderBy(asc(navGroups.sort), asc(navGroups.createdAt)).all();
+  const rows = await orm.select(navGroupSelect).from(navGroups).orderBy(asc(navGroups.sort), asc(navGroups.createdAt)).all();
+  navGroupsCache = { rows, expiresAt: nowTs + 6e4 };
+  return rows;
 }
 async function getNavGroupById(db, id) {
   const orm = createDb(db);
@@ -58125,6 +58151,7 @@ async function createNavGroup(db, body) {
     updatedAt: ts
   }).run();
   await syncNavGroupRule(db, { id, parent_id: parentId, name, icon, sort });
+  invalidateNavGroupsCache();
   return { id };
 }
 async function updateNavGroup(db, id, body) {
@@ -58153,6 +58180,7 @@ async function updateNavGroup(db, id, body) {
     updatedAt: now$5()
   }).where(eq(navGroups.id, id)).run();
   await syncNavGroupRule(db, { id, parent_id: parentId, name, icon, sort });
+  invalidateNavGroupsCache();
   return { ok: true };
 }
 async function deleteNavGroup(db, id) {
@@ -58165,6 +58193,7 @@ async function deleteNavGroup(db, id) {
   if (childCollection) return { error: "请先删除或移走该分组下的集合", status: 400 };
   await orm.delete(navGroups).where(eq(navGroups.id, id)).run();
   await unregisterNavGroupRule(db, id);
+  invalidateNavGroupsCache();
   return { ok: true };
 }
 async function reorderNavGroups(db, parentId, ids) {
@@ -58191,6 +58220,7 @@ async function reorderNavGroups(db, parentId, ids) {
       sort
     });
   }
+  invalidateNavGroupsCache();
   return { ok: true };
 }
 const DEFAULT_PUBLIC_ALLOWED_METHODS = ["schema", "data"];
@@ -59083,10 +59113,22 @@ async function listModels(db) {
   const rows = await orm.select(modelSelect).from(models).orderBy(asc(models.createdAt)).all();
   return rows.map(parseModel);
 }
+const modelIdCache = /* @__PURE__ */ new Map();
+function invalidateModelCache(id) {
+  if (id) modelIdCache.delete(id);
+  else modelIdCache.clear();
+}
 async function getModelById(db, id) {
+  const nowTs = Date.now();
+  const cached2 = modelIdCache.get(id);
+  if (cached2 && cached2.expiresAt > nowTs) {
+    return cached2.record;
+  }
   const orm = createDb(db);
   const row = await orm.select(modelSelect).from(models).where(eq(models.id, id)).get();
-  return row ? parseModel(row) : null;
+  const record = row ? parseModel(row) : null;
+  modelIdCache.set(id, { record, expiresAt: nowTs + 6e4 });
+  return record;
 }
 async function getModelBySlug(db, slug) {
   const orm = createDb(db);
@@ -59143,6 +59185,7 @@ async function updateModel(db, id, body) {
     status,
     updatedAt: now$4()
   }).where(eq(models.id, id)).run();
+  invalidateModelCache(id);
   return { ok: true };
 }
 async function deleteModel(db, id) {
@@ -59154,6 +59197,7 @@ async function deleteModel(db, id) {
   const current = await orm.select({ id: models.id }).from(models).where(eq(models.id, id)).get();
   if (!current) return { error: "模型不存在", status: 404 };
   await orm.delete(models).where(eq(models.id, id)).run();
+  invalidateModelCache(id);
   return { ok: true };
 }
 const ENUM_TYPES = /* @__PURE__ */ new Set(["select", "multi_select", "radio", "checkbox"]);
@@ -59481,13 +59525,25 @@ async function listCollections(db) {
   })));
   return withPaths;
 }
+const collectionSlugCache = /* @__PURE__ */ new Map();
+function invalidateCollectionSlugCache(slug) {
+  if (slug) collectionSlugCache.delete(slug);
+  else collectionSlugCache.clear();
+}
 async function getCollectionById(db, id) {
   const orm = createDb(db);
   return orm.select(collectionSelect).from(collections).where(eq(collections.id, id)).get() ?? null;
 }
 async function getCollectionBySlug(db, slug) {
+  const nowTs = Date.now();
+  const cached2 = collectionSlugCache.get(slug);
+  if (cached2 && cached2.expiresAt > nowTs) {
+    return cached2.record;
+  }
   const orm = createDb(db);
-  return orm.select(collectionSelect).from(collections).where(eq(collections.slug, slug)).get() ?? null;
+  const record = await orm.select(collectionSelect).from(collections).where(eq(collections.slug, slug)).get() ?? null;
+  collectionSlugCache.set(slug, { record, expiresAt: nowTs + 6e4 });
+  return record;
 }
 async function syncCollectionMenu(db, input) {
   await registerResourceRules(db, {
@@ -59546,6 +59602,7 @@ async function createCollection(db, body) {
     const message2 = err instanceof Error ? err.message : "权限节点注册失败";
     return { error: message2, status: 500 };
   }
+  invalidateCollectionSlugCache();
   return { id };
 }
 async function updateCollection(db, id, body) {
@@ -59601,6 +59658,7 @@ async function updateCollection(db, id, body) {
     sort,
     groupId
   });
+  invalidateCollectionSlugCache(current.slug);
   return { ok: true };
 }
 async function updateCollectionApiPolicy(db, id, policyInput) {
@@ -59617,6 +59675,7 @@ async function updateCollectionApiPolicy(db, id, policyInput) {
     fieldConfig: JSON.stringify(nextConfig),
     updatedAt: now$3()
   }).where(eq(collections.id, id)).run();
+  invalidateCollectionSlugCache(current.slug);
   return { ok: true, field_config: nextConfig, slug: current.slug };
 }
 async function updateCollectionNotificationPolicy(db, id, policyInput) {
@@ -59679,6 +59738,7 @@ async function deleteCollection(db, id) {
   }
   await orm.delete(collections).where(eq(collections.id, id)).run();
   await unregisterResourceRules(db, "collection", current.slug);
+  invalidateCollectionSlugCache(current.slug);
   return { ok: true };
 }
 async function reorderCollections(db, groupId, ids) {
@@ -59705,6 +59765,7 @@ async function reorderCollections(db, groupId, ids) {
       groupId: row.group_id
     });
   }
+  invalidateCollectionSlugCache();
   return { ok: true };
 }
 function applyCollectionFieldGenerators(inputData, _fields, _fieldConfig, _collectionSlug, _entityId, _options) {
@@ -59821,7 +59882,7 @@ async function listEntities(db, collectionId, query = {}) {
   const orderExpr = orderField ? sql`cast(coalesce(json_extract(${entities.dataJson}, ${`$.${orderField}`}), 0) as real) ${orderDir}` : null;
   const orm = createDb(db);
   let total = 0;
-  if (paginate) {
+  if (paginate && !query.skipTotal) {
     const totalRow = await orm.select({ total: count() }).from(entities).where(where2).get();
     total = Number(totalRow?.total || 0);
   }
@@ -59834,7 +59895,7 @@ async function listEntities(db, collectionId, query = {}) {
       displayLabel: entityDisplayLabel(parsed, displayField)
     };
   });
-  if (!paginate) {
+  if (!paginate || query.skipTotal) {
     total = list.length;
   }
   return {
@@ -61290,7 +61351,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-kGPKWLFk.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-BHlfJYRo.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61306,7 +61367,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-kGPKWLFk.js");
+  const { saveMemberTranslationsMap } = await import("./translations-BHlfJYRo.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61627,8 +61688,8 @@ function projectPublicEntity(row, fields, whitelist, loaded) {
   );
   return { data: projected, ...regions };
 }
-async function publicList(db, slug, request) {
-  const loaded = await loadPublicCollection(db, slug);
+async function publicList(db, slug, request, preloaded, options = {}) {
+  const loaded = preloaded || await loadPublicCollection(db, slug);
   if (!loaded.ok) return loaded;
   const gate = await ensureMethodAllowed(db, loaded.policy, "data", request);
   if (!gate.ok) return gate;
@@ -61656,6 +61717,7 @@ async function publicList(db, slug, request) {
     pageSize: query.pageSize,
     dataEquals,
     dataContains,
+    skipTotal: options.skipTotal,
     createdBy: loaded.policy.record_scope === "owner" ? gate.member.id : void 0,
     orderByDataNumber: ordering ? {
       field: ordering.fieldKey,
@@ -61692,19 +61754,19 @@ async function publicList(db, slug, request) {
     collection: { id: loaded.collection.id, name: loaded.collection.name, slug: loaded.collection.slug }
   };
 }
-async function publicSingle(db, slug, request) {
+async function publicSingle(db, slug, request, preloaded) {
   const url = request ? new URL(request.url) : new URL("https://local.invalid/");
   url.searchParams.set("page", "1");
   url.searchParams.set("pageSize", "1");
   const nextRequest = request ? new Request(url.toString(), request) : void 0;
-  const result = await publicList(db, slug, nextRequest);
+  const result = await publicList(db, slug, nextRequest, preloaded, { skipTotal: true });
   if ("error" in result) return result;
   const item = result.list[0];
   if (!item) return { ok: false, error: "内容不存在", status: 404 };
   return { item, collection: result.collection };
 }
-async function publicGet(db, slug, id, request) {
-  const loaded = await loadPublicCollection(db, slug);
+async function publicGet(db, slug, id, request, preloaded) {
+  const loaded = preloaded || await loadPublicCollection(db, slug);
   if (!loaded.ok) return loaded;
   const gate = await ensureMethodAllowed(db, loaded.policy, "data", request);
   if (!gate.ok) return gate;
@@ -61737,8 +61799,8 @@ async function publicGet(db, slug, id, request) {
   item = after.item || item;
   return { item };
 }
-async function publicSchema(db, slug, request) {
-  const loaded = await loadPublicCollection(db, slug);
+async function publicSchema(db, slug, request, preloaded) {
+  const loaded = preloaded || await loadPublicCollection(db, slug);
   if (!loaded.ok) return loaded;
   const blocked = await ensureMethodAllowed(db, loaded.policy, "schema", request);
   if (!blocked.ok) return blocked;
@@ -61873,7 +61935,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-kGPKWLFk.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-BHlfJYRo.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -61932,13 +61994,17 @@ async function attachCors(c, method2, slug, run, options = {}) {
         c.env.RATE_LIMITER,
         `public-read:${slug}:${clientIp(c.req.raw)}`,
         PUBLIC_READ_MISS_LIMIT_PER_MIN,
-        60
+        60,
+        { asyncWrite: true }
       );
       if (!rl.success) {
         return publicFail(c, 429, "请求过于频繁，请稍后再试");
       }
+      if (rl.writePromise) {
+        c.executionCtx.waitUntil(rl.writePromise);
+      }
     }
-    const response2 = await run();
+    const response2 = await run(loaded);
     applyHeaders(response2, corsHeadersMap);
     if (response2.status === 200) {
       applyHeaders(response2, {
@@ -61957,13 +62023,17 @@ async function attachCors(c, method2, slug, run, options = {}) {
       c.env.RATE_LIMITER,
       `public-read:${slug}:${clientIp(c.req.raw)}`,
       PUBLIC_READ_MISS_LIMIT_PER_MIN,
-      60
+      60,
+      { asyncWrite: true }
     );
     if (!rl.success) {
       return publicFail(c, 429, "请求过于频繁，请稍后再试");
     }
+    if (rl.writePromise) {
+      c.executionCtx.waitUntil(rl.writePromise);
+    }
   }
-  const response = await run();
+  const response = await run(loaded);
   applyHeaders(response, corsHeadersMap);
   applyHeaders(response, publicNoStoreHeaders());
   return response;
@@ -61985,8 +62055,8 @@ publicApiRoutes.get("/schema/:path{.+}", async (c) => {
     c,
     "schema",
     resolved.slug,
-    async () => {
-      const result = await publicSchema(c.env.DB, resolved.slug, c.req.raw);
+    async (loaded) => {
+      const result = await publicSchema(c.env.DB, resolved.slug, c.req.raw, loaded);
       if ("error" in result) return publicFail(c, result.status, result.error);
       const { collection, model, fields, capabilities } = result;
       return publicOk(c, { collection, model, fields, capabilities, path: resolved.publicPath });
@@ -62001,18 +62071,18 @@ publicApiRoutes.get("/data/:path{.+}", async (c) => {
     c,
     "data",
     resolved.slug,
-    async () => {
+    async (loaded) => {
       if (resolved.entityId) {
-        const result2 = await publicGet(c.env.DB, resolved.slug, resolved.entityId, c.req.raw);
+        const result2 = await publicGet(c.env.DB, resolved.slug, resolved.entityId, c.req.raw, loaded);
         if ("error" in result2) return publicFail(c, result2.status, result2.error);
         return publicOk(c, { ...result2.item, path: resolved.publicPath });
       }
       if (resolved.single) {
-        const result2 = await publicSingle(c.env.DB, resolved.slug, c.req.raw);
+        const result2 = await publicSingle(c.env.DB, resolved.slug, c.req.raw, loaded);
         if ("error" in result2) return publicFail(c, result2.status, result2.error);
         return publicOk(c, { ...result2.item, path: resolved.publicPath });
       }
-      const result = await publicList(c.env.DB, resolved.slug, c.req.raw);
+      const result = await publicList(c.env.DB, resolved.slug, c.req.raw, loaded);
       if ("error" in result) return publicFail(c, result.status, result.error);
       return publicOk(c, {
         list: result.list,
@@ -62819,7 +62889,7 @@ sitesRoutes.put("/frontend", requireRule("sites.frontend.edit"), async (c) => {
   }
 });
 sitesRoutes.post("/frontend/:id/revalidate", requireRule("sites.frontend.edit"), async (c) => {
-  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-caG7ePw2.js");
+  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-CB6QV9iG.js");
   const body = await c.req.json().catch(() => ({}));
   const paths = Array.isArray(body.paths) ? body.paths.map(String) : void 0;
   const collections2 = Array.isArray(body.collections) ? body.collections.map(String) : void 0;

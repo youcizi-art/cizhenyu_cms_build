@@ -1,4 +1,4 @@
-import { w } from "./assets/worker-entry-EI7U6z4L.js";
+import { w } from "./assets/worker-entry-CDGSVskl.js";
 import "node:events";
 import "node:stream";
 export {
