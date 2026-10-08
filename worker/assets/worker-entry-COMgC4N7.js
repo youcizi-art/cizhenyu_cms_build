@@ -61351,7 +61351,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-BHlfJYRo.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-mvOdrQ66.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61367,7 +61367,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-BHlfJYRo.js");
+  const { saveMemberTranslationsMap } = await import("./translations-mvOdrQ66.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61879,10 +61879,6 @@ async function publicSubmit(db, kv, slug, body, clientKey, request) {
   return { ok: true, id, locale: locale2, languageGroupKey, notifyTask };
 }
 const publicApiRoutes = new Hono();
-publicApiRoutes.use("*", async (c, next2) => {
-  await bootDb(c.env);
-  await next2();
-});
 function applyHeaders(response, headers) {
   for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value);
@@ -61935,7 +61931,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-BHlfJYRo.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-mvOdrQ66.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -62048,8 +62044,35 @@ async function optionsForSplat(c, splat) {
 publicApiRoutes.options("/schema/:path{.+}", (c) => optionsForSplat(c, readPublicPathParam(c)));
 publicApiRoutes.options("/data/:path{.+}", (c) => optionsForSplat(c, readPublicPathParam(c)));
 publicApiRoutes.options("/submit/:path{.+}", (c) => optionsForSplat(c, readPublicPathParam(c)));
+async function tryMatchEarlyPublicCache(c, scopePrefix, splat) {
+  const bypass = shouldBypassPublicCache(c.req.raw);
+  if (bypass) return null;
+  const parsed = parsePublicPathParam(splat);
+  if (!parsed.pathSegments.length) return null;
+  const quickSlug = parsed.pathSegments[parsed.pathSegments.length - 1];
+  if (!quickSlug) return null;
+  const cacheKey = await buildVersionedCacheKey(c.env.NS_CONFIG, `${scopePrefix}:${quickSlug}`, c.req.url);
+  const hit = await matchPublicEdgeCache(cacheKey);
+  if (hit) {
+    const cached2 = new Response(hit.body, hit);
+    const reqOrigin = c.req.header("Origin");
+    if (reqOrigin && !cached2.headers.has("Access-Control-Allow-Origin")) {
+      cached2.headers.set("Access-Control-Allow-Origin", reqOrigin);
+    }
+    applyHeaders(cached2, {
+      "X-Cache": "HIT",
+      ...publicCacheControlHeaders(),
+      "Cache-Tag": buildPublicCacheTags(quickSlug).join(",")
+    });
+    return cached2;
+  }
+  return null;
+}
 publicApiRoutes.get("/schema/:path{.+}", async (c) => {
-  const resolved = await resolveRouteCollection(c, readPublicPathParam(c));
+  const splat = readPublicPathParam(c);
+  const earlyHit = await tryMatchEarlyPublicCache(c, "schema", splat);
+  if (earlyHit) return earlyHit;
+  const resolved = await resolveRouteCollection(c, splat);
   if (!resolved.ok) return publicFail(c, resolved.status, resolved.error);
   return attachCors(
     c,
@@ -62065,7 +62088,10 @@ publicApiRoutes.get("/schema/:path{.+}", async (c) => {
   );
 });
 publicApiRoutes.get("/data/:path{.+}", async (c) => {
-  const resolved = await resolveRouteCollection(c, readPublicPathParam(c));
+  const splat = readPublicPathParam(c);
+  const earlyHit = await tryMatchEarlyPublicCache(c, "data", splat);
+  if (earlyHit) return earlyHit;
+  const resolved = await resolveRouteCollection(c, splat);
   if (!resolved.ok) return publicFail(c, resolved.status, resolved.error);
   return attachCors(
     c,
@@ -62889,7 +62915,7 @@ sitesRoutes.put("/frontend", requireRule("sites.frontend.edit"), async (c) => {
   }
 });
 sitesRoutes.post("/frontend/:id/revalidate", requireRule("sites.frontend.edit"), async (c) => {
-  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-CB6QV9iG.js");
+  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-DdxCCtvM.js");
   const body = await c.req.json().catch(() => ({}));
   const paths = Array.isArray(body.paths) ? body.paths.map(String) : void 0;
   const collections2 = Array.isArray(body.collections) ? body.collections.map(String) : void 0;
@@ -63001,15 +63027,23 @@ sitesRoutes.post("/bind-domain", requireRule("sites.domains.edit"), async (c) =>
   }
 });
 async function hostAclMiddleware(c, next2) {
-  await bootDb(c.env);
-  const domains = await getSiteDomains(c.env.DB);
-  const hostname = new URL(c.req.url).hostname.toLowerCase();
-  let target = resolveHostTarget(hostname, domains);
+  const url = new URL(c.req.url);
+  const path = url.pathname;
+  const hostname = url.hostname.toLowerCase();
+  const isPublicApi = path.startsWith("/api/p/") || path.startsWith("/v1/p/") || path === "/api/health";
+  if (!isPublicApi) {
+    await bootDb(c.env);
+  }
+  let target;
   if (isWorkersDevAdminHost(hostname, c.env.WORKER_NAME)) {
     target = "admin";
+  } else if (c.env.SITE_API_DOMAIN && hostname === c.env.SITE_API_DOMAIN.toLowerCase()) {
+    target = "api";
+  } else {
+    const domains = await getSiteDomains(c.env.DB);
+    target = resolveHostTarget(hostname, domains);
   }
   c.set("hostTarget", target);
-  const path = new URL(c.req.url).pathname;
   if (target === "api" && !isApiHostPathAllowed(path)) {
     if (path.startsWith("/api/p/") || path.startsWith("/v1/p/")) {
       return c.json({ status: 404, msg: "该主机仅提供公开 API", data: null }, 404);
