@@ -9025,9 +9025,9 @@ function requireRule(rule) {
 const VERSION_PREFIX = "pub_ver:";
 function publicCacheControlHeaders() {
   return {
-    "Cache-Control": "public, max-age=300, s-maxage=86400, stale-while-revalidate=86400",
-    "CDN-Cache-Control": "public, max-age=86400, stale-while-revalidate=86400",
-    Vary: "Origin, Accept-Encoding"
+    "Cache-Control": "public, max-age=300, s-maxage=172800, stale-while-revalidate=86400",
+    "CDN-Cache-Control": "public, max-age=172800, stale-while-revalidate=86400",
+    Vary: "Accept-Encoding"
   };
 }
 function publicNoStoreHeaders() {
@@ -61351,7 +61351,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-mvOdrQ66.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-COZ6AkKO.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61367,7 +61367,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-mvOdrQ66.js");
+  const { saveMemberTranslationsMap } = await import("./translations-COZ6AkKO.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61931,7 +61931,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-mvOdrQ66.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-COZ6AkKO.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -62686,6 +62686,34 @@ async function purgeCloudflareCacheTags(env2, tags) {
   }
   return { ok: true, tags: unique };
 }
+async function enableTieredCache(env2, zoneId) {
+  const token2 = requireToken(env2);
+  try {
+    const res = await fetch(
+      `${CF_API_BASE}/zones/${zoneId}/cache/tiered_cache_smart_topology_enable`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token2}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ value: "on" })
+      }
+    );
+    if (res.ok) return true;
+    const fallbackRes = await fetch(`${CF_API_BASE}/zones/${zoneId}/cache/tiered_cache`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token2}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ value: "on" })
+    });
+    return fallbackRes.ok;
+  } catch {
+    return false;
+  }
+}
 async function bindDomainSlot(env2, options) {
   await verifyCfToken(env2);
   let fullDomain = normalizeHostname(options.domain);
@@ -62697,6 +62725,7 @@ async function bindDomainSlot(env2, options) {
   const zoneId = await getZoneId(env2, fullDomain);
   const bucketName = await resolveMediaBucketName(env2);
   const oldDomain = normalizeHostname(options.oldDomain || "");
+  await enableTieredCache(env2, zoneId).catch(() => false);
   if (isResourceDomainSlot(options.type)) {
     if (oldDomain && oldDomain !== fullDomain) {
       await deleteR2Domain(env2, bucketName, oldDomain).catch(() => void 0);
@@ -62724,6 +62753,7 @@ const cloudflare = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   checkDomainHealth,
   deleteR2Domain,
   deleteWorkerDomain,
+  enableTieredCache,
   getR2CustomDomains,
   getWorkerCustomDomains,
   getZoneId,
@@ -62915,7 +62945,7 @@ sitesRoutes.put("/frontend", requireRule("sites.frontend.edit"), async (c) => {
   }
 });
 sitesRoutes.post("/frontend/:id/revalidate", requireRule("sites.frontend.edit"), async (c) => {
-  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-DdxCCtvM.js");
+  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-B1ruOxZh.js");
   const body = await c.req.json().catch(() => ({}));
   const paths = Array.isArray(body.paths) ? body.paths.map(String) : void 0;
   const collections2 = Array.isArray(body.collections) ? body.collections.map(String) : void 0;
@@ -63038,6 +63068,8 @@ async function hostAclMiddleware(c, next2) {
   if (isWorkersDevAdminHost(hostname, c.env.WORKER_NAME)) {
     target = "admin";
   } else if (c.env.SITE_API_DOMAIN && hostname === c.env.SITE_API_DOMAIN.toLowerCase()) {
+    target = "api";
+  } else if (isPublicApi && hostname.startsWith("api.")) {
     target = "api";
   } else {
     const domains = await getSiteDomains(c.env.DB);
