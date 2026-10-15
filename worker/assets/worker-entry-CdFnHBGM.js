@@ -9041,15 +9041,25 @@ function shouldBypassPublicCache(request) {
   if (request.headers.get("Authorization")) return true;
   return false;
 }
+const versionCache = /* @__PURE__ */ new Map();
+const VERSION_CACHE_TTL_MS = 15e3;
 async function getPublicResourceVersion(kv, scope) {
   if (!kv) return "0";
-  const value = await kv.get(`${VERSION_PREFIX}${scope}`);
-  return value || "0";
+  const now2 = Date.now();
+  const cached2 = versionCache.get(scope);
+  if (cached2 && cached2.expiresAt > now2) {
+    return cached2.value;
+  }
+  const value = await kv.get(`${VERSION_PREFIX}${scope}`) || "0";
+  versionCache.set(scope, { value, expiresAt: now2 + VERSION_CACHE_TTL_MS });
+  return value;
 }
 async function bumpPublicResourceVersion(kv, scope) {
+  versionCache.delete(scope);
   if (!kv) return "0";
   const next2 = `${Date.now()}`;
   await kv.put(`${VERSION_PREFIX}${scope}`, next2);
+  versionCache.set(scope, { value: next2, expiresAt: Date.now() + VERSION_CACHE_TTL_MS });
   return next2;
 }
 function buildPublicCacheTags(collectionSlug, extras = []) {
@@ -58071,18 +58081,18 @@ const navGroupSelect = {
 function now$5() {
   return Date.now();
 }
-let navGroupsCache = null;
+let navGroupsCache$1 = null;
 function invalidateNavGroupsCache() {
-  navGroupsCache = null;
+  navGroupsCache$1 = null;
 }
 async function listNavGroups(db) {
   const nowTs = Date.now();
-  if (navGroupsCache && navGroupsCache.expiresAt > nowTs) {
-    return navGroupsCache.rows;
+  if (navGroupsCache$1 && navGroupsCache$1.expiresAt > nowTs) {
+    return navGroupsCache$1.rows;
   }
   const orm = createDb(db);
   const rows = await orm.select(navGroupSelect).from(navGroups).orderBy(asc(navGroups.sort), asc(navGroups.createdAt)).all();
-  navGroupsCache = { rows, expiresAt: nowTs + 6e4 };
+  navGroupsCache$1 = { rows, expiresAt: nowTs + 6e4 };
   return rows;
 }
 async function getNavGroupById(db, id) {
@@ -59444,9 +59454,32 @@ function parsePublicPathParam(raw) {
   }).map((item) => item.trim()).filter(Boolean);
   return splitPublicResourcePath(segments);
 }
+let navGroupsCache = null;
+const NAV_GROUPS_TTL_MS = 6e4;
+async function getCachedNavGroups(db) {
+  const now2 = Date.now();
+  if (navGroupsCache && now2 - navGroupsCache.at < NAV_GROUPS_TTL_MS) {
+    return navGroupsCache.groups;
+  }
+  const groups = await listNavGroups(db);
+  navGroupsCache = { at: now2, groups };
+  return groups;
+}
+const collectionMetaCache = /* @__PURE__ */ new Map();
+const COLLECTION_META_TTL_MS = 6e4;
+async function getCachedCollectionBySlug(db, slug) {
+  const now2 = Date.now();
+  const cached2 = collectionMetaCache.get(slug);
+  if (cached2 && now2 - cached2.at < COLLECTION_META_TTL_MS) {
+    return cached2.item;
+  }
+  const item = await getCollectionBySlug(db, slug);
+  collectionMetaCache.set(slug, { at: now2, item });
+  return item;
+}
 async function getGroupSlugPath(db, groupId) {
   if (!groupId) return [];
-  const groups = await listNavGroups(db);
+  const groups = await getCachedNavGroups(db);
   const byId = new Map(groups.map((row) => [row.id, row]));
   const chain = [];
   let cursor = groupId;
@@ -59471,7 +59504,7 @@ async function resolveCollectionByPublicPath(db, pathSegments) {
   }
   const collectionSlug = pathSegments[pathSegments.length - 1];
   const groupSlugs = pathSegments.slice(0, -1);
-  const collection = await getCollectionBySlug(db, collectionSlug);
+  const collection = await getCachedCollectionBySlug(db, collectionSlug);
   if (!collection || collection.status !== "enabled") {
     return { ok: false, error: "集合不存在或已禁用", status: 404 };
   }
@@ -61351,7 +61384,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-COZ6AkKO.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-B4MG5whv.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -61367,7 +61400,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-COZ6AkKO.js");
+  const { saveMemberTranslationsMap } = await import("./translations-B4MG5whv.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -61931,7 +61964,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-COZ6AkKO.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-B4MG5whv.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -62945,7 +62978,7 @@ sitesRoutes.put("/frontend", requireRule("sites.frontend.edit"), async (c) => {
   }
 });
 sitesRoutes.post("/frontend/:id/revalidate", requireRule("sites.frontend.edit"), async (c) => {
-  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-B1ruOxZh.js");
+  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-35sEUrCL.js");
   const body = await c.req.json().catch(() => ({}));
   const paths = Array.isArray(body.paths) ? body.paths.map(String) : void 0;
   const collections2 = Array.isArray(body.collections) ? body.collections.map(String) : void 0;

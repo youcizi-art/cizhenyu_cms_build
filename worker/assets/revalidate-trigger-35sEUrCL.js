@@ -1,4 +1,4 @@
-import { n as normalizeHostname, g as getZoneId, a as getFrontendSites } from "./worker-entry-Dv9mdlyw.js";
+import { n as normalizeHostname, g as getZoneId, a as getFrontendSites } from "./worker-entry-CdFnHBGM.js";
 import "node:events";
 import "node:stream";
 const CF_API_BASE = "https://api.cloudflare.com/client/v4";
