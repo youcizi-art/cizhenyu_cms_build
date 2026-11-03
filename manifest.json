@@ -1,6 +1,6 @@
 {
   "kind": "cms-worker",
-  "version": "20261030",
+  "version": "20261103",
   "entry": "worker/index.js",
   "assetsDir": "client",
   "migrationsDir": "migrations",
