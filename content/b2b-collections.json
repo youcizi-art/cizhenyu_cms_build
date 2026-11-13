@@ -6,7 +6,25 @@
     "groupPath": "b2b/content",
     "description": "长文内容发布，聚焦标题、正文、摘要和封面图等基础内容维护。",
     "icon": "FileTextOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "文章/博客",
+      "zh-TW": "文章/部落格",
+      "ja": "記事/ブログ",
+      "en-US": "Articles / Blog",
+      "es": "Artículos / Blog",
+      "pt": "Artigos / Blog",
+      "ar": "المقالات / المدونة"
+    },
+    "descriptionI18n": {
+      "zh-CN": "长文内容发布，聚焦标题、正文、摘要和封面图等基础内容维护。",
+      "zh-TW": "長文內容發布，聚焦標題、正文、摘要和封面圖等基礎內容維護。",
+      "ja": "長文コンテンツの公開。タイトル、本文、要約、カバー画像などの基本情報を管理します。",
+      "en-US": "Long-form content publishing focused on title, body, summary, and cover image.",
+      "es": "Publicación de contenido largo centrada en título, cuerpo, resumen e imagen de portada.",
+      "pt": "Publicação de conteúdo longo focada em título, corpo, resumo e imagem de capa.",
+      "ar": "نشر محتوى طويل يركز على العنوان والنص والملخص وصورة الغلاف."
+    }
   },
   {
     "name": "客户询盘",
@@ -15,7 +33,25 @@
     "groupPath": "b2b/business",
     "description": "来自前端站点的产品询盘，自动归集到线索中。",
     "icon": "MailOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "客户询盘",
+      "zh-TW": "客戶詢盤",
+      "ja": "お問い合わせ",
+      "en-US": "Customer Inquiries",
+      "es": "Consultas de clientes",
+      "pt": "Consultas de clientes",
+      "ar": "استفسارات العملاء"
+    },
+    "descriptionI18n": {
+      "zh-CN": "来自前端站点的产品询盘，自动归集到线索中。",
+      "zh-TW": "來自前端站點的產品詢盤，自動歸集到線索中。",
+      "ja": "フロントエンドからの製品問い合わせをリードとして自動集約します。",
+      "en-US": "Product inquiries from the frontend site, auto-collected as leads.",
+      "es": "Consultas de productos del sitio frontend, recopiladas automáticamente como leads.",
+      "pt": "Consultas de produtos do site frontend, coletadas automaticamente como leads.",
+      "ar": "استفسارات المنتجات من الواجهة الأمامية، تُجمع تلقائياً كعملاء محتملين."
+    }
   },
   {
     "name": "产品",
@@ -24,7 +60,25 @@
     "groupPath": "b2b/products",
     "description": "外贸 B2B 核心产品数据，聚焦基础信息、图片展示与正文描述。",
     "icon": "InboxOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "产品",
+      "zh-TW": "產品",
+      "ja": "製品",
+      "en-US": "Products",
+      "es": "Productos",
+      "pt": "Produtos",
+      "ar": "المنتجات"
+    },
+    "descriptionI18n": {
+      "zh-CN": "外贸 B2B 核心产品数据，聚焦基础信息、图片展示与正文描述。",
+      "zh-TW": "外貿 B2B 核心產品資料，聚焦基礎資訊、圖片展示與正文描述。",
+      "ja": "B2B向け製品データ。基本情報、画像、本文説明を管理します。",
+      "en-US": "Core B2B product data focused on basics, images, and descriptions.",
+      "es": "Datos centrales de productos B2B: información básica, imágenes y descripciones.",
+      "pt": "Dados centrais de produtos B2B: informações básicas, imagens e descrições.",
+      "ar": "بيانات منتجات B2B الأساسية: المعلومات والصور والوصف."
+    }
   },
   {
     "name": "案例",
@@ -33,7 +87,25 @@
     "groupPath": "b2b/content",
     "description": "案例展示与案例详情内容，用于品牌背书和项目成果展示。",
     "icon": "SolutionOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "案例",
+      "zh-TW": "案例",
+      "ja": "事例",
+      "en-US": "Case Studies",
+      "es": "Casos de estudio",
+      "pt": "Estudos de caso",
+      "ar": "دراسات الحالة"
+    },
+    "descriptionI18n": {
+      "zh-CN": "案例展示与案例详情内容，用于品牌背书和项目成果展示。",
+      "zh-TW": "案例展示與案例詳情內容，用於品牌背書和專案成果展示。",
+      "ja": "事例紹介と詳細。ブランド実績と成果の提示に使用します。",
+      "en-US": "Case study listings and details for brand proof and project outcomes.",
+      "es": "Listados y detalles de casos para respaldo de marca y resultados de proyectos.",
+      "pt": "Listagens e detalhes de casos para comprovação da marca e resultados de projetos.",
+      "ar": "عرض ودراسة الحالات لدعم العلامة التجارية ونتائج المشاريع."
+    }
   },
   {
     "name": "公司信息",
@@ -42,7 +114,25 @@
     "groupPath": "b2b/settings",
     "description": "企业基础信息（名称、地址、联系方式等），供前端 About 页面与 Footer 使用。",
     "icon": "BankOutlined",
-    "presentationMode": "single_form"
+    "presentationMode": "single_form",
+    "nameI18n": {
+      "zh-CN": "公司信息",
+      "zh-TW": "公司資訊",
+      "ja": "会社情報",
+      "en-US": "Company Info",
+      "es": "Información de la empresa",
+      "pt": "Informações da empresa",
+      "ar": "معلومات الشركة"
+    },
+    "descriptionI18n": {
+      "zh-CN": "企业基础信息（名称、地址、联系方式等），供前端 About 页面与 Footer 使用。",
+      "zh-TW": "企業基礎資訊（名稱、地址、聯絡方式等），供前端 About 頁面與 Footer 使用。",
+      "ja": "企業の基本情報（名称・住所・連絡先など）。Aboutページとフッターで使用します。",
+      "en-US": "Basic company info (name, address, contacts) for About pages and footer.",
+      "es": "Información básica de la empresa (nombre, dirección, contactos) para About y pie de página.",
+      "pt": "Informações básicas da empresa (nome, endereço, contatos) para About e rodapé.",
+      "ar": "معلومات الشركة الأساسية (الاسم والعنوان وجهات الاتصال) لصفحة About والتذييل."
+    }
   },
   {
     "name": "内容区块",
@@ -51,7 +141,25 @@
     "groupPath": "b2b/content",
     "description": "站点级可复用区块：首页首屏、列表页 Banner、页脚 CTA、公告条等散落展示内容。",
     "icon": "LayoutOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "内容区块",
+      "zh-TW": "內容區塊",
+      "ja": "コンテンツブロック",
+      "en-US": "Content Blocks",
+      "es": "Bloques de contenido",
+      "pt": "Blocos de conteúdo",
+      "ar": "كتل المحتوى"
+    },
+    "descriptionI18n": {
+      "zh-CN": "站点级可复用区块：首页首屏、列表页 Banner、页脚 CTA、公告条等散落展示内容。",
+      "zh-TW": "站點級可複用區塊：首頁首屏、列表頁 Banner、頁腳 CTA、公告條等散落展示內容。",
+      "ja": "サイト共通の再利用ブロック：ヒーロー、バナー、フッターCTA、告知バーなど。",
+      "en-US": "Reusable site blocks: hero, list banners, footer CTAs, announcement bars, etc.",
+      "es": "Bloques reutilizables del sitio: hero, banners, CTA del pie, barras de anuncio, etc.",
+      "pt": "Blocos reutilizáveis do site: hero, banners, CTAs do rodapé, barras de anúncio, etc.",
+      "ar": "كتل قابلة لإعادة الاستخدام: البطل واللافتات وCTA التذييل وشريط الإعلانات."
+    }
   },
   {
     "name": "内容分类",
@@ -60,7 +168,25 @@
     "groupPath": "b2b/content",
     "description": "内容管理专用分类模型，用于文章、案例、行业、FAQ 与资源中心的内容归类。",
     "icon": "ApartmentOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "内容分类",
+      "zh-TW": "內容分類",
+      "ja": "コンテンツ分類",
+      "en-US": "Content Categories",
+      "es": "Categorías de contenido",
+      "pt": "Categorias de conteúdo",
+      "ar": "تصنيفات المحتوى"
+    },
+    "descriptionI18n": {
+      "zh-CN": "内容管理专用分类模型，用于文章、案例、行业、FAQ 与资源中心的内容归类。",
+      "zh-TW": "內容管理專用分類模型，用於文章、案例、行業、FAQ 與資源中心的內容歸類。",
+      "ja": "記事・事例・業界・FAQ・資料センター向けのコンテンツ分類モデル。",
+      "en-US": "Content taxonomy for articles, cases, industries, FAQ, and resource center.",
+      "es": "Taxonomía de contenido para artículos, casos, industrias, FAQ y centro de recursos.",
+      "pt": "Taxonomia de conteúdo para artigos, casos, indústrias, FAQ e centro de recursos.",
+      "ar": "تصنيف المحتوى للمقالات والحالات والصناعات والأسئلة الشائعة ومركز الموارد."
+    }
   },
   {
     "name": "实体",
@@ -69,7 +195,25 @@
     "groupPath": "b2b/knowledge",
     "description": "用于沉淀品牌、术语、机构、主题等可复用实体数据。",
     "icon": "ClusterOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "实体",
+      "zh-TW": "實體",
+      "ja": "エンティティ",
+      "en-US": "Entities",
+      "es": "Entidades",
+      "pt": "Entidades",
+      "ar": "الكيانات"
+    },
+    "descriptionI18n": {
+      "zh-CN": "用于沉淀品牌、术语、机构、主题等可复用实体数据。",
+      "zh-TW": "用於沉澱品牌、術語、機構、主題等可複用實體資料。",
+      "ja": "ブランド・用語・組織・テーマなど再利用可能なエンティティデータを蓄積します。",
+      "en-US": "Reusable entity data for brands, terms, organizations, and topics.",
+      "es": "Datos de entidades reutilizables para marcas, términos, organizaciones y temas.",
+      "pt": "Dados de entidades reutilizáveis para marcas, termos, organizações e temas.",
+      "ar": "بيانات كيانات قابلة لإعادة الاستخدام للعلامات والمصطلحات والمؤسسات والمواضيع."
+    }
   },
   {
     "name": "常见问题",
@@ -78,7 +222,25 @@
     "groupPath": "b2b/content",
     "description": "FAQ 知识模块，可挂接到产品页、文章页与品牌页。",
     "icon": "QuestionCircleOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "常见问题",
+      "zh-TW": "常見問題",
+      "ja": "よくある質問",
+      "en-US": "FAQ",
+      "es": "Preguntas frecuentes",
+      "pt": "Perguntas frequentes",
+      "ar": "الأسئلة الشائعة"
+    },
+    "descriptionI18n": {
+      "zh-CN": "FAQ 知识模块，可挂接到产品页、文章页与品牌页。",
+      "zh-TW": "FAQ 知識模組，可掛接到產品頁、文章頁與品牌頁。",
+      "ja": "FAQモジュール。製品・記事・ブランドページに紐付けできます。",
+      "en-US": "FAQ knowledge module attachable to product, article, and brand pages.",
+      "es": "Módulo FAQ enlazable a páginas de producto, artículo y marca.",
+      "pt": "Módulo FAQ vinculável a páginas de produto, artigo e marca.",
+      "ar": "وحدة الأسئلة الشائعة قابلة للربط بصفحات المنتج والمقال والعلامة."
+    }
   },
   {
     "name": "行业解决方案",
@@ -87,7 +249,25 @@
     "groupPath": "b2b/content",
     "description": "行业场景页面，适合沉淀行业痛点、解决方案与行业内容说明。",
     "icon": "BuildOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "行业解决方案",
+      "zh-TW": "行業解決方案",
+      "ja": "業界ソリューション",
+      "en-US": "Industry Solutions",
+      "es": "Soluciones industriales",
+      "pt": "Soluções industriais",
+      "ar": "حلول صناعية"
+    },
+    "descriptionI18n": {
+      "zh-CN": "行业场景页面，适合沉淀行业痛点、解决方案与行业内容说明。",
+      "zh-TW": "行業場景頁面，適合沉澱行業痛點、解決方案與行業內容說明。",
+      "ja": "業界向けページ。課題・ソリューション・説明コンテンツを整理します。",
+      "en-US": "Industry scenario pages for pain points, solutions, and related content.",
+      "es": "Páginas de escenarios industriales para dolores, soluciones y contenido relacionado.",
+      "pt": "Páginas de cenários industriais para dores, soluções e conteúdo relacionado.",
+      "ar": "صفحات سيناريوهات الصناعة لنقاط الألم والحلول والمحتوى ذي الصلة."
+    }
   },
   {
     "name": "导航管理",
@@ -96,7 +276,25 @@
     "groupPath": "b2b/settings",
     "description": "站点导航菜单配置，支持 Header / Footer / Sidebar 多区域。",
     "icon": "MenuOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "导航管理",
+      "zh-TW": "導航管理",
+      "ja": "ナビゲーション管理",
+      "en-US": "Navigation",
+      "es": "Navegación",
+      "pt": "Navegação",
+      "ar": "التنقل"
+    },
+    "descriptionI18n": {
+      "zh-CN": "站点导航菜单配置，支持 Header / Footer / Sidebar 多区域。",
+      "zh-TW": "站點導航選單配置，支援 Header / Footer / Sidebar 多區域。",
+      "ja": "サイトナビ設定。Header / Footer / Sidebar など複数領域に対応。",
+      "en-US": "Site navigation menus for Header / Footer / Sidebar regions.",
+      "es": "Menús de navegación del sitio para Header / Footer / Sidebar.",
+      "pt": "Menus de navegação do site para Header / Footer / Sidebar.",
+      "ar": "قوائم تنقل الموقع لمناطق الرأس والتذييل والشريط الجانبي."
+    }
   },
   {
     "name": "导航菜单项",
@@ -105,7 +303,25 @@
     "groupPath": "b2b/settings",
     "description": "菜单层级节点与具体链接项",
     "icon": "UnorderedListOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "导航菜单项",
+      "zh-TW": "導航選單項",
+      "ja": "ナビ項目",
+      "en-US": "Nav Menu Items",
+      "es": "Elementos de menú",
+      "pt": "Itens de menu",
+      "ar": "عناصر قائمة التنقل"
+    },
+    "descriptionI18n": {
+      "zh-CN": "菜单层级节点与具体链接项",
+      "zh-TW": "選單層級節點與具體連結項",
+      "ja": "メニュー階層ノードと具体的なリンク項目",
+      "en-US": "Menu hierarchy nodes and concrete link items",
+      "es": "Nodos de jerarquía de menú y elementos de enlace concretos",
+      "pt": "Nós da hierarquia de menu e itens de link concretos",
+      "ar": "عقد التسلسل الهرمي للقائمة وعناصر الروابط"
+    }
   },
   {
     "name": "在线留言",
@@ -114,7 +330,25 @@
     "groupPath": "b2b/business",
     "description": "通用联系表单，自动归集到线索中心",
     "icon": "MessageOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "在线留言",
+      "zh-TW": "線上留言",
+      "ja": "オンライン伝言",
+      "en-US": "Online Messages",
+      "es": "Mensajes en línea",
+      "pt": "Mensagens online",
+      "ar": "رسائل عبر الإنترنت"
+    },
+    "descriptionI18n": {
+      "zh-CN": "通用联系表单，自动归集到线索中心",
+      "zh-TW": "通用聯絡表單，自動歸集到線索中心",
+      "ja": "汎用お問い合わせフォーム。リードセンターへ自動集約します。",
+      "en-US": "Generic contact form, auto-collected into the lead center",
+      "es": "Formulario de contacto genérico, recopilado automáticamente en el centro de leads",
+      "pt": "Formulário de contacto genérico, recolhido automaticamente no centro de leads",
+      "ar": "نموذج اتصال عام يُجمع تلقائياً في مركز العملاء المحتملين"
+    }
   },
   {
     "name": "独立页面",
@@ -123,7 +357,25 @@
     "groupPath": "b2b/content",
     "description": "独立页面内容容器，用于关于我们、联系页、专题页和普通落地页。",
     "icon": "AppstoreOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "独立页面",
+      "zh-TW": "獨立頁面",
+      "ja": "独立ページ",
+      "en-US": "Pages",
+      "es": "Páginas",
+      "pt": "Páginas",
+      "ar": "الصفحات"
+    },
+    "descriptionI18n": {
+      "zh-CN": "独立页面内容容器，用于关于我们、联系页、专题页和普通落地页。",
+      "zh-TW": "獨立頁面內容容器，用於關於我們、聯絡頁、專題頁和普通落地頁。",
+      "ja": "独立ページ用コンテナ。About・お問い合わせ・特集・LPなどに使用。",
+      "en-US": "Standalone page container for About, Contact, campaigns, and landing pages.",
+      "es": "Contenedor de páginas independientes para About, Contacto, campañas y landings.",
+      "pt": "Contentor de páginas independentes para About, Contacto, campanhas e landings.",
+      "ar": "حاوية صفحات مستقلة لـ About والتواصل والحملات وصفحات الهبوط."
+    }
   },
   {
     "name": "产品分类",
@@ -132,7 +384,25 @@
     "groupPath": "b2b/products",
     "description": "产品中心专用分类模型，用于产品列表、详情页和分类归档展示。",
     "icon": "ApartmentOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "产品分类",
+      "zh-TW": "產品分類",
+      "ja": "製品分類",
+      "en-US": "Product Categories",
+      "es": "Categorías de producto",
+      "pt": "Categorias de produto",
+      "ar": "تصنيفات المنتجات"
+    },
+    "descriptionI18n": {
+      "zh-CN": "产品中心专用分类模型，用于产品列表、详情页和分类归档展示。",
+      "zh-TW": "產品中心專用分類模型，用於產品列表、詳情頁和分類歸檔展示。",
+      "ja": "製品センター向け分類。一覧・詳細・分類アーカイブ表示に使用。",
+      "en-US": "Product-center taxonomy for listings, detail pages, and category archives.",
+      "es": "Taxonomía del centro de productos para listados, detalles y archivos de categoría.",
+      "pt": "Taxonomia do centro de produtos para listagens, detalhes e arquivos de categoria.",
+      "ar": "تصنيف مركز المنتجات للقوائم وصفحات التفاصيل وأرشيف التصنيفات."
+    }
   },
   {
     "name": "产品规格模板",
@@ -141,7 +411,25 @@
     "groupPath": "b2b/products",
     "description": "沉淀产品规格模板，供产品录入时快速引用并在具体产品上二次调整。",
     "icon": "ProfileOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "产品规格模板",
+      "zh-TW": "產品規格模板",
+      "ja": "製品仕様テンプレート",
+      "en-US": "Product Spec Templates",
+      "es": "Plantillas de especificaciones",
+      "pt": "Modelos de especificações",
+      "ar": "قوالب مواصفات المنتج"
+    },
+    "descriptionI18n": {
+      "zh-CN": "沉淀产品规格模板，供产品录入时快速引用并在具体产品上二次调整。",
+      "zh-TW": "沉澱產品規格模板，供產品錄入時快速引用並在具體產品上二次調整。",
+      "ja": "製品仕様テンプレートを蓄積し、入力時に参照・個別調整できます。",
+      "en-US": "Reusable product specification templates for fast entry and per-product tweaks.",
+      "es": "Plantillas reutilizables de especificaciones para entrada rápida y ajustes por producto.",
+      "pt": "Modelos reutilizáveis de especificações para entrada rápida e ajustes por produto.",
+      "ar": "قوالب مواصفات قابلة لإعادة الاستخدام للإدخال السريع والتعديل لكل منتج."
+    }
   },
   {
     "name": "资料下载",
@@ -150,7 +438,25 @@
     "groupPath": "b2b/content",
     "description": "B2B 资料下载中心，用于发布产品目录、白皮书、技术手册、案例集等可下载资料。",
     "icon": "DownloadOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "资料下载",
+      "zh-TW": "資料下載",
+      "ja": "資料ダウンロード",
+      "en-US": "Downloads",
+      "es": "Descargas",
+      "pt": "Downloads",
+      "ar": "التنزيلات"
+    },
+    "descriptionI18n": {
+      "zh-CN": "B2B 资料下载中心，用于发布产品目录、白皮书、技术手册、案例集等可下载资料。",
+      "zh-TW": "B2B 資料下載中心，用於發布產品目錄、白皮書、技術手冊、案例集等可下載資料。",
+      "ja": "B2B資料ダウンロード。カタログ、ホワイトペーパー、マニュアル、事例集など。",
+      "en-US": "B2B download center for catalogs, whitepapers, manuals, and case packs.",
+      "es": "Centro de descargas B2B para catálogos, whitepapers, manuales y packs de casos.",
+      "pt": "Centro de downloads B2B para catálogos, whitepapers, manuais e packs de casos.",
+      "ar": "مركز تنزيلات B2B للكتالوجات والأوراق البيضاء والأدلة وحزم الحالات."
+    }
   },
   {
     "name": "语义分类",
@@ -159,7 +465,25 @@
     "groupPath": "b2b/knowledge",
     "description": "用于实体库的标签组织与归类，不承担产品分类或内容分类职能。",
     "icon": "ClusterOutlined",
-    "presentationMode": "list"
+    "presentationMode": "list",
+    "nameI18n": {
+      "zh-CN": "语义分类",
+      "zh-TW": "語意分類",
+      "ja": "セマンティック分類",
+      "en-US": "Taxonomy",
+      "es": "Taxonomía",
+      "pt": "Taxonomia",
+      "ar": "التصنيف الدلالي"
+    },
+    "descriptionI18n": {
+      "zh-CN": "用于实体库的标签组织与归类，不承担产品分类或内容分类职能。",
+      "zh-TW": "用於實體庫的標籤組織與歸類，不承擔產品分類或內容分類職能。",
+      "ja": "エンティティ用タグ整理。製品分類・コンテンツ分類とは別用途です。",
+      "en-US": "Tag organization for the entity library; not product or content categories.",
+      "es": "Organización de etiquetas para la biblioteca de entidades; no es categoría de producto/contenido.",
+      "pt": "Organização de etiquetas para a biblioteca de entidades; não é categoria de produto/conteúdo.",
+      "ar": "تنظيم الوسوم لمكتبة الكيانات؛ ليس تصنيف منتجات أو محتوى."
+    }
   },
   {
     "name": "翻译字段",
@@ -168,6 +492,24 @@
     "groupPath": "b2b/settings",
     "description": "维护站点级翻译字段 JSON 配置，供多语言字段映射与文案生成场景使用。",
     "icon": "TranslationOutlined",
-    "presentationMode": "single_form"
+    "presentationMode": "single_form",
+    "nameI18n": {
+      "zh-CN": "翻译字段",
+      "zh-TW": "翻譯欄位",
+      "ja": "翻訳フィールド",
+      "en-US": "Translation Fields",
+      "es": "Campos de traducción",
+      "pt": "Campos de tradução",
+      "ar": "حقول الترجمة"
+    },
+    "descriptionI18n": {
+      "zh-CN": "维护站点级翻译字段 JSON 配置，供多语言字段映射与文案生成场景使用。",
+      "zh-TW": "維護站點級翻譯欄位 JSON 配置，供多語言欄位對映與文案生成場景使用。",
+      "ja": "サイト級翻訳フィールドのJSON設定。多言語マッピングと文言生成に使用。",
+      "en-US": "Site-level translation field JSON for multilingual mapping and copy generation.",
+      "es": "JSON de campos de traducción a nivel de sitio para mapeo multilingüe y generación de textos.",
+      "pt": "JSON de campos de tradução ao nível do site para mapeamento multilíngue e geração de textos.",
+      "ar": "إعداد JSON لحقول الترجمة على مستوى الموقع لربط متعدد اللغات وتوليد النصوص."
+    }
   }
 ]

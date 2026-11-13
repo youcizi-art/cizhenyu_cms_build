@@ -9161,7 +9161,10 @@ const DEFAULT_CONTENT_LANGUAGES = [
   { code: "zh-CN", name: "简体中文", isDefault: true, sortOrder: 0 },
   { code: "zh-TW", name: "繁體中文", sortOrder: 10 },
   { code: "ja", name: "日本語", sortOrder: 20 },
-  { code: "en-US", name: "English", sortOrder: 30 }
+  { code: "en-US", name: "English", sortOrder: 30 },
+  { code: "es", name: "Español", sortOrder: 40 },
+  { code: "pt", name: "Português", sortOrder: 50 },
+  { code: "ar", name: "العربية", sortOrder: 60 }
 ];
 async function listLanguages(db) {
   const orm = createDb(db);
@@ -93448,7 +93451,7 @@ membersAdminRoutes.put("/settings", requireRule("members.settings"), async (c) =
 });
 membersAdminRoutes.get("/translations", requireRule("members.translations"), async (c) => {
   const { listLanguages: listLanguages2 } = await Promise.resolve().then(() => languages);
-  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-xJrVZkPK.js");
+  const { buildEditorTranslations, getMemberTranslationsMap } = await import("./translations-BtgPeIVl.js");
   const languages$12 = (await listLanguages2(c.env.DB)).filter((row) => row.status === "active");
   const stored = await getMemberTranslationsMap(c.env.DB);
   const locales = languages$12.map((row) => row.code);
@@ -93464,7 +93467,7 @@ membersAdminRoutes.get("/translations", requireRule("members.translations"), asy
 });
 membersAdminRoutes.put("/translations", requireRule("members.translations.edit"), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { saveMemberTranslationsMap } = await import("./translations-xJrVZkPK.js");
+  const { saveMemberTranslationsMap } = await import("./translations-BtgPeIVl.js");
   const stored = await saveMemberTranslationsMap(c.env.DB, body);
   const { invalidateSystemPublicCache: invalidateSystemPublicCache2 } = await Promise.resolve().then(() => cache);
   const locales = Object.keys(stored || {});
@@ -94028,7 +94031,7 @@ publicApiRoutes.get("/languages", async (c) => {
 publicApiRoutes.get("/translations", async (c) => {
   const locale2 = String(c.req.query("locale") || "zh-CN").trim() || "zh-CN";
   return cachedSystemGet(c, `system:translations:${locale2}`, async () => {
-    const { getMemberTranslationsForLocale } = await import("./translations-xJrVZkPK.js");
+    const { getMemberTranslationsForLocale } = await import("./translations-BtgPeIVl.js");
     const data = await getMemberTranslationsForLocale(c.env.DB, locale2);
     return publicOk(c, { locale: locale2, translations: data });
   });
@@ -95054,7 +95057,7 @@ sitesRoutes.put("/frontend", requireRule("sites.frontend.edit"), async (c) => {
   }
 });
 sitesRoutes.post("/frontend/:id/revalidate", requireRule("sites.frontend.edit"), async (c) => {
-  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-GX-sA7xL.js");
+  const { triggerFrontendSiteRevalidate } = await import("./revalidate-trigger-T7tGDM_Z.js");
   const body = await c.req.json().catch(() => ({}));
   const paths = Array.isArray(body.paths) ? body.paths.map(String) : void 0;
   const collections2 = Array.isArray(body.collections) ? body.collections.map(String) : void 0;
